@@ -18,21 +18,83 @@ const mapsData = [
       {name: 'Roof', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/3iRfs8bs7ZDzQLiXtWH5sk/faffda675d754e148bb0ab2c249239ae/r6-maps-bank-blueprint-4.jpg'}
     ]},
   
-  { id: 2, name: 'Border' , thumbnail: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/4hqsrL3cokFqedkfjiEaGf/c73f6714b535263a18e4de2ca2405dd1/r6-maps-border__1_.jpg'},
+  { id: 2, 
+    name: 'Border' , 
+    thumbnail: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/4hqsrL3cokFqedkfjiEaGf/c73f6714b535263a18e4de2ca2405dd1/r6-maps-border__1_.jpg',
+    floors: [
+      {name: 'Ground', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/4nl4T7y1mBfwrti5e8Jq9Q/78fc6dbba89cdcc5a10a8e90889e870b/r6-maps-border-blueprint-1.jpg'},
+      {name: 'First Floor', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/1lG2AxuPadRvfN8Vjx7jGV/200afc5ce945628b744437a20969b1c5/r6-maps-border-blueprint-2.jpg'},
+      {name: 'Roof', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/7KjYpqMzBlBDHY1Vbwtz55/d87fe5e00d1623434a9499d485d6d196/r6-maps-border-blueprint-3.jpg'}
+    ]},
   
-  { id: 3, name: 'Clubhouse', thumbnail: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/1vCw5eD2XzxZlv6Au1gtui/baeebaa75cd672e0af8f9f624cf61bde/r6-maps-clubhouse.jpg' },
+  { id: 3, 
+    name: 'Clubhouse', 
+    thumbnail: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/1vCw5eD2XzxZlv6Au1gtui/baeebaa75cd672e0af8f9f624cf61bde/r6-maps-clubhouse.jpg',
+    floors: [
+      {name: 'Basement', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/6Zs2KBoWjSdaC3qssqwB9N/33907dda5e0363659477296c0e9756c5/r6-maps-clubhouse-blueprint-1.jpg'},
+      {name: 'Ground', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/3taneZwe0lPRHGvXcJZb6Q/a35fd0b00699bbcc7a88bd2c08db96b6/r6-maps-clubhouse-blueprint-2.jpg'},
+      {name: 'Second Floor', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/4StUcsi07j6h4DPrmgF5rC/bb99e697439b647bb4fd192b29bb588c/r6-maps-clubhouse-blueprint-3.jpg'},
+      {name: 'Roof', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/5tP8wrsOiDBfa7NzkUUCQQ/b5e27ccd5b145ce59f8886b004e32c8e/r6-maps-clubhouse-blueprint-4.jpg'}
+    ]},
   
-  { id: 4, name: 'Consulate', thumbnail: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/6PR2sBla9E6TNurVUfJ0mc/9a58f08dca1c465787e5a1b6cf6a136b/CONSULATE_REWORK_PREVIEW_03_960x540.jpg' },
+  { id: 4, 
+    name: 'Consulate', 
+    thumbnail: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/6PR2sBla9E6TNurVUfJ0mc/9a58f08dca1c465787e5a1b6cf6a136b/CONSULATE_REWORK_PREVIEW_03_960x540.jpg',
+    floors: [
+      {name: 'Basement', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/14Ww7AoFdDGhcjgWpLTMdV/77bc68f24869fd75b49a715b67925488/r6-maps-consulate-blueprint-1.jpg'},
+      {name: 'Ground', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/v0KtqRwgoNXSvGxjn0MVR/ec1200c055944ceba822a118d3611197/r6-maps-consulate-blueprint-2.jpg'},
+      {name: 'First Floor', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/5Tu3Q2DYvBFyqszsrTwawU/cd611afdefa6713e3ec7237fabb58299/r6-maps-consulate-blueprint-3.jpg'},
+      {name: 'Roof', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/7fTsFMVeL4crvNABSGRMxJ/680ea0834826726ef5901a5d200f9c6a/r6-maps-consulate-blueprint-4.jpg'}
+  ]},
   
-  { id: 5, name: 'Coastline', thumbnail: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/5GfAQ3pXCJnDqiqaDH3Zic/db1722cd699bb864ee8f7b0db951b0c3/r6-maps-coastline.jpg' },
+  { id: 5, 
+    name: 'Coastline', 
+    thumbnail: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/5GfAQ3pXCJnDqiqaDH3Zic/db1722cd699bb864ee8f7b0db951b0c3/r6-maps-coastline.jpg',
+    floors: [
+      {name: 'First Floor', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/4b0lpXOb5Hv6kgJ2BvrjP9/59b1ccd49d36b8b38621d39d8f9479f9/r6-maps-coastline-blueprint-1.jpg'},
+      {name: 'Second Floor', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/5juDHwzsSzib8ljx1IzhUa/47430644b7f65c72df9f26a340bead84/r6-maps-coastline-blueprint-2.jpg'},
+      {name: 'Roof', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/2F2dvGQqZQk0AzfTN4VbT5/7fbb95687a759f3bd9e0ece51d667e8e/r6-maps-coastline-blueprint-3.jpg'}
+    ]},
   
-  { id: 6, name: 'Kafe Dostoyevsky', thumbnail: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/2nIuPSHvbM57TK90VSwBEm/70144ada56cf1ba72103aeb4ece9ed1a/r6-maps-kafe.jpg' },
+  { id: 6, 
+    name: 'Kafe Dostoyevsky', 
+    thumbnail: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/2nIuPSHvbM57TK90VSwBEm/70144ada56cf1ba72103aeb4ece9ed1a/r6-maps-kafe.jpg',
+    floors: [
+      {name: 'Basement', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/3WeSCQnTruB4nJ0n9xm7U7/cec112a997dd78b46515b6242d25a379/r6-maps-kafe-blueprint-1.jpg'},
+      {name: 'Ground', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/7njwDjC8jAG7g2krGRKsYb/2c4216a5f3baee22074759ba1dd45e55/r6-maps-kafe-blueprint-2.jpg'},
+      {name: 'First Floor', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/15f2nyYsxok1GMsuFCrOTW/9036cb95e0f3e048b93aed8f4c13483a/r6-maps-kafe-blueprint-3.jpg'},
+      {name: 'Roof', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/3DdjeKrUij0wzjVlF4FML3/6d74c067b57490ccdc7dc7b180618811/r6-maps-kafe-blueprint-4.jpg'}
+    ]},
   
-  { id: 7, name: 'Oregon', thumbnail: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/Z9a0gU7iR0vfcbXtoJUOW/42ad6aabbd189fbcd74c497627f1624e/r6-maps-oregon.jpg'},
+  { id: 7, 
+    name: 'Oregon', 
+    thumbnail: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/Z9a0gU7iR0vfcbXtoJUOW/42ad6aabbd189fbcd74c497627f1624e/r6-maps-oregon.jpg',
+    floors: [
+      {name: 'Basement', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/qxSuuyTFOj9GcclwEl77K/49277f2343c81f14825415a3cb4e0f96/r6-maps-oregon-blueprint-1.jpg'},
+      {name: 'Ground', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/6KfdmrotDdUSi3shCZn6O4/2316ad1fb161254f7fb38b2e6c906e64/r6-maps-oregon-blueprint-2.jpg'},
+      {name: 'First Floor', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/K3su6xloMRGuZPQw0yIVD/000e6deabe35780e68d356690d4625a6/r6-maps-oregon-blueprint-3.jpg'},
+      {name: 'Second Floor', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/3eC0jrji8bJSrukCV8Th4j/ea96c1108b4575eabc16361a67826c6b/r6-maps-oregon-blueprint-4.jpg'},
+      {name: 'Roof', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/4eUlLOqpfR70gM7miuIIuT/082b5df86be7b17b2931b4c4e6fbe0bb/r6-maps-oregon-blueprint-5.jpg'}
+    ]},
   
-  { id: 8, name: 'Skyscraper', thumbnail: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/7vblsbhmSPLsI3pQJ5Dqx9/f213af09981f5c8ec9b71fb0c3f9dcdd/r6-maps-skyscraper.jpg' },
+  { id: 8, 
+    name: 'Skyscraper', 
+    thumbnail: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/7vblsbhmSPLsI3pQJ5Dqx9/f213af09981f5c8ec9b71fb0c3f9dcdd/r6-maps-skyscraper.jpg',
+    floors: [
+      {name: 'First Floor', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/3c0AWlxZek6YUUNTaNfyO6/6b22cb6614a28bf9c13641b234cfd7ed/r6-maps-skyscraper-blueprint-1.jpg'},
+      {name: 'Second Floor', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/1l0EjB5o3s3HewE1VqmRlu/20fc25c788e0be7519a3cdba8ff5a433/r6-maps-skyscraper-blueprint-2.jpg'},
+      {name: 'Roof', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/6gdx6cZMOzGaVLn5T4tSzv/7099853a4831478ba36d1444fb358c8a/r6-maps-skyscraper-blueprint-3.jpg'}
+    ]},
   
-  { id: 9, name: 'Villa', thumbnail: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/Io6dxNeHbCbJoF9WLJf9s/ebf89b009affba37df84dcf1934c74e0/r6-maps-villa.jpg' },
+  { id: 9, 
+    name: 'Villa', 
+    thumbnail: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/Io6dxNeHbCbJoF9WLJf9s/ebf89b009affba37df84dcf1934c74e0/r6-maps-villa.jpg',
+    floors: [
+      {name: 'Basement', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/1CDFxayW2mJLAJy1I9KlvY/cc04fefb6181fea17cd7ae4a8e460f1b/r6-maps-villa-blueprint-1.jpg'},
+      {name: 'First Floor', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/3J49jyCJZ6nhs8NaPDxolQ/8831f7742e9f3f1e3350fd4691465275/r6-maps-villa-blueprint-3.jpg'},
+      {name: 'Second Floor', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/DgTowUc6zjVXVDa2pKLX1/a820faf2af99b971a19ab799115b28f1/r6-maps-villa-blueprint-4.jpg'},
+      {name: 'Roof', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/2ZnV8AUq0FtZ8T3XxaYGwK/038468ed870ffc0075f6ade04808d7d2/r6-maps-villa-blueprint-5.jpg'},
+    ]},
 ];
 
 // Function to handle map selection (just logs for now)
@@ -68,16 +130,20 @@ const App = () => {
     };
     resizeCanvas();
   
-    const getMousePos = (e) => {
+    const getPos = (e) => {
       const rect = canvas.getBoundingClientRect();
+      // Handle both mouse and touch events
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
       return {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top,
+        x: clientX - rect.left,
+        y: clientY - rect.top,
       };
     };
   
     const startDrawing = (e) => {
-      const pos = getMousePos(e);
+      e.preventDefault(); // Prevent scrolling on touch devices
+      const pos = getPos(e);
       startX = pos.x;
       startY = pos.y;
       drawing = true;
@@ -91,7 +157,7 @@ const App = () => {
         }
         drawing = false;
       } else if (currentTool === 'eraser') {
-        ctx.clearRect(startX, startY, 10, 10);
+        ctx.clearRect(startX, startY, 20, 20); // Larger eraser for touch
       } else if (currentTool === 'pen') {
         ctx.beginPath();
         ctx.moveTo(startX, startY);
@@ -100,34 +166,35 @@ const App = () => {
   
     const draw = (e) => {
       if (!drawing) return;
-      const pos = getMousePos(e);
+      e.preventDefault(); // Prevent scrolling
+      const pos = getPos(e);
   
       if (currentTool === 'pen') {
         ctx.lineTo(pos.x, pos.y);
         ctx.strokeStyle = 'red';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 3; // Slightly thicker for mobile
         ctx.stroke();
       } else if (currentTool === 'eraser') {
-        ctx.clearRect(pos.x, pos.y, 10, 10);
+        ctx.clearRect(pos.x - 10, pos.y - 10, 20, 20);
       }
     };
   
     const stopDrawing = (e) => {
       if (!drawing) return;
-      const pos = getMousePos(e);
+      const pos = getPos(e);
   
       if (currentTool === 'line') {
         ctx.beginPath();
         ctx.moveTo(startX, startY);
         ctx.lineTo(pos.x, pos.y);
         ctx.strokeStyle = 'blue';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 3;
         ctx.stroke();
       } else if (currentTool === 'shape') {
         const width = pos.x - startX;
         const height = pos.y - startY;
         ctx.strokeStyle = 'green';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 3;
         ctx.strokeRect(startX, startY, width, height);
       }
   
@@ -135,15 +202,22 @@ const App = () => {
       ctx.closePath();
     };
   
+    // Add touch events alongside mouse events
     canvas.addEventListener('mousedown', startDrawing);
     canvas.addEventListener('mousemove', draw);
     canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('touchstart', startDrawing);
+    canvas.addEventListener('touchmove', draw);
+    canvas.addEventListener('touchend', stopDrawing);
     window.addEventListener('resize', resizeCanvas);
   
     return () => {
       canvas.removeEventListener('mousedown', startDrawing);
       canvas.removeEventListener('mousemove', draw);
       canvas.removeEventListener('mouseup', stopDrawing);
+      canvas.removeEventListener('touchstart', startDrawing);
+      canvas.removeEventListener('touchmove', draw);
+      canvas.removeEventListener('touchend', stopDrawing);
       window.removeEventListener('resize', resizeCanvas);
     };
   }, [currentTool, selectedMap]);
@@ -173,26 +247,30 @@ const App = () => {
 
   const ToolButton = ({ label, icon, current, setCurrent }) => (
     <div
-      className={`p-4 rounded-lg text-center cursor-pointer hover:bg-gray-400 ${
-        current === label.toLowerCase() ? 'bg-blue-500' : 'bg-gray-300'
-      }`}
+      className={`p-2 sm:p-4 rounded-lg text-center cursor-pointer hover:bg-gray-400 
+        ${current === label.toLowerCase() ? 'bg-blue-500' : 'bg-gray-300'}
+        min-w-[60px] sm:min-w-[80px]`}
       onClick={() => setCurrent(label.toLowerCase())}
     >
-      <p className="font-semibold">{label} Tool</p>
-      <i className={`${icon} text-2xl`}></i>
+      <i className={`${icon} text-xl sm:text-2xl`}></i>
+      <p className="font-semibold text-xs sm:text-sm mt-1">{label}</p>
     </div>
   );
 
   return (
     <div className="flex flex-col h-screen">
       {/* Header */}
-      <div className="bg-gray-800 text-white p-4 flex justify-between items-center h-16">
-        <div className="text-lg font-semibold">Rainbow Six Siege Map Annotations</div>
-        <div className="flex space-x-4">
-          <button className="bg-gray-600 px-4 py-2 rounded">User Account</button>
+      <div className="bg-gray-800 text-white p-2 sm:p-4 flex flex-col sm:flex-row justify-between items-center h-auto sm:h-16">
+        <div className="text-lg font-semibold text-center w-full sm:w-auto mb-2 sm:mb-0">
+          Rainbow Six Siege Map Annotations
+        </div>
+        <div className="flex space-x-2 sm:space-x-4">
+          <button className="bg-gray-600 px-2 sm:px-4 py-1 sm:py-2 rounded text-sm sm:text-base">
+            User Account
+          </button>
           <div className="relative">
             <button
-              className="bg-gray-600 px-4 py-2 rounded"
+              className="bg-gray-600 px-2 sm:px-4 py-1 sm:py-2 rounded text-sm sm:text-base"
               onClick={() => setShowSettings(!showSettings)}
             >
               Settings
@@ -218,7 +296,16 @@ const App = () => {
       {/* Main Body Layout */}
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar (Vertical Menu) */}
-        <div className={`bg-gray-800 text-white w-64 p-6 space-y-6 ${isSidebarOpen ? '' : 'hidden'} flex flex-col overflow-y-auto`}>
+        <div className={`bg-gray-800 text-white w-full sm:w-64 p-3 sm:p-6 space-y-3 sm:space-y-6 
+          ${isSidebarOpen ? 'absolute z-50 sm:relative' : 'hidden'} 
+          flex flex-col overflow-y-auto h-screen sm:h-auto`}>
+          {/* Add this close button at the top */}
+          <button 
+            className="sm:hidden absolute right-4 top-4 text-white"
+            onClick={() => setIsSidebarOpen(false)}
+          >
+            <i className="fas fa-times text-xl"></i>
+          </button>
           {/* Maps Title */}
           <div className="text-2xl font-semibold text-center">Maps</div>
 
@@ -295,13 +382,20 @@ const App = () => {
               </div>
 
               {toolLayout === 'horizontal' && (
-                <div className="flex flex-wrap justify-start gap-2">
-                  {renderToolButtons()}
-                </div>
+                <div className={`flex ${toolLayout === 'vertical' ? 'flex-col' : 'flex-wrap'} gap-2 
+                ${toolLayout === 'vertical' ? 'w-20 sm:w-28' : 'w-full'} shrink-0`}>
+                {renderToolButtons()}
+              </div>
               )}
         </div>
       </div>
     </div>
+    <button 
+      className="sm:hidden fixed bottom-4 right-4 bg-blue-500 text-white p-3 rounded-full shadow-lg z-50"
+      onClick={() => setIsSidebarOpen(true)}
+    >
+      <i className="fas fa-bars text-xl"></i>
+    </button>
   </div>
   );
 };
