@@ -5,6 +5,7 @@ import MapViewer from './components/MapViewer';
 import Sidebar from './components/Sidebar';
 import AnnotationTools from './components/AnnotationTools';
 import './styles.css';
+import { map } from 'leaflet';
 
 // Maps data
 const mapsData = [
@@ -97,14 +98,6 @@ const mapsData = [
     ]},
 ];
 
-// Function to handle map selection (just logs for now)
-const setSelectedMap = (map) => {
-  console.log('Selected Map:', map);
-};
-
-const setSelectedFloor = (floor) => {
-  console.log('Selected Floor:', floor);
-};
 const App = () => {
   const [selectedMap, setSelectedMap] = useState(null);
   const [selectedFloor, setSelectedFloor] = useState(null);
@@ -114,7 +107,10 @@ const App = () => {
   const [showSettings, setShowSettings] = useState(false);
   const canvasRef = useRef(null);
 
-
+  const handleMapSelect = (map) => {
+    setSelectedMap(map);
+    setSelectedFloor(null); // Reset floor selection when a new map is selected
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -315,7 +311,7 @@ const App = () => {
               <button
                 key={map.id}
                 className="bg-gray-500 text-white py-2 px-4 rounded w-full text-left hover:bg-gray-400"
-                onClick={() => setSelectedMap(map)}
+                onClick={() => handleMapSelect(map)}
               >
                 {map.thumbnail && (
                   <img 
@@ -361,7 +357,7 @@ const App = () => {
                 ))}
               </div>
 
-              {selectedFloor?.image || selectedMap?.thumbnail ? (
+              {selectedMap ?(
                 <>
                   <img
                     src={selectedFloor?.image || selectedMap.thumbnail}
