@@ -31,3 +31,10 @@ code {
 body {
   overscroll-behavior-y: contain;
 }
+
+.cursor-grab {
+  cursor: grab;
+}
+.cursor-grabbing {
+  cursor: grabbing;
+}

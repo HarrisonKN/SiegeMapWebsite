@@ -3,7 +3,6 @@ import React from 'react';
 const Sidebar = ({ maps, onMapSelect, onFloorSelect }) => {
   return (
     <div className="sidebar">
-      <h2>Select Map</h2>
       <ul>
         {maps.map(map => (
           <li key={map.id}>
