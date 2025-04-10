@@ -8,6 +8,7 @@ import MapViewer from './components/MapViewer';
 import Sidebar from './components/Sidebar';
 import AnnotationTools from './components/AnnotationTools';
 import './styles.css';
+import { clear } from '@testing-library/user-event/dist/clear';
 
 
 const App = () => {
@@ -20,12 +21,27 @@ const App = () => {
   const [selectedOperator, setSelectedOperator] = useState(null);
   const [placedOperators, setPlacedOperators] = useState([]);
   const [mapSize, setMapSize] = useState({ width: 0, height: 0 });
+  const [annotations, setAnnotations] = useState([]);
+  const [floorAnnotations, setFloorAnnotations] = useState({});
 
   const canvasRef = useRef(null);
   const { zoom, setZoom } = useAppContext();
   const scrollRef = useRef(null);
   const zoomRef = useRef(zoom);
   const lastZoomCenter = useRef(null);
+
+  const redrawCanvas = () => {
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext('2d');
+    if (!canvas || !ctx) return;
+  
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const floorKey = getCurrentFloorKey();
+    if (!floorKey) return;
+  
+    const currentAnnotations = floorAnnotations[floorKey] || [];
+    drawAnnotations(ctx, currentAnnotations);
+  };
 
   const handleMapSelect = (map) => {
     setSelectedMap(map);
@@ -53,6 +69,32 @@ const App = () => {
       const operator = JSON.parse(data);
       setPlacedOperators((prev) => [...prev, { ...operator, x, y }]);
     }
+  };
+
+
+  const getCurrentFloorKey = () => {
+    if (!selectedMap || !selectedFloor) return null;
+    return `${selectedMap.id}_${selectedFloor.name}`;
+  };
+  
+  const saveAnnotationToFloor = (annotation) => {
+    const floorKey = getCurrentFloorKey();
+    if (!floorKey) return;
+  
+    setFloorAnnotations(prev => ({
+      ...prev,
+      [floorKey]: [...(prev[floorKey] || []), annotation]
+    }));
+  };
+  
+  const clearCurrentFloorAnnotations = () => {
+    const floorKey = getCurrentFloorKey();
+    if (!floorKey) return;
+  
+    setFloorAnnotations(prev => ({
+      ...prev,
+      [floorKey]: []
+    }));
   };
 
 
@@ -87,6 +129,94 @@ const App = () => {
       container.scrollTop = scrollY;
     });
   }, [mapSize.width, mapSize.height, zoom, selectedMap]); 
+
+  const drawLine = (ctx, item) => {
+    ctx.beginPath();
+    ctx.moveTo(item.points[0].x * zoom, item.points[0].y * zoom);
+    ctx.lineTo(item.points[1].x * zoom, item.points[1].y * zoom);
+    ctx.strokeStyle = item.color;
+    ctx.lineWidth = item.width * zoom;
+    ctx.stroke();
+  };
+
+  const drawShape = (ctx, item) => {
+    ctx.strokeStyle = item.color;
+    ctx.lineWidth = item.width * zoom;
+    ctx.strokeRect(
+      item.x * zoom,
+      item.y * zoom,
+      item.widthPx * zoom,
+      item.heightPx * zoom
+    );
+  };
+
+  const drawText = (ctx, item) => {
+    ctx.fillStyle = item.color;
+    ctx.font = `${item.size * zoom}px Arial`;
+    ctx.fillText(item.text, item.x * zoom, item.y * zoom);
+  };
+
+  const drawStroke = (ctx, stroke) => {
+    if (!stroke.points.length) return;
+    
+    const scaledWidth = stroke.width * zoom;
+    
+    ctx.beginPath();
+    ctx.moveTo(stroke.points[0].x * zoom, stroke.points[0].y * zoom);
+    stroke.points.slice(1).forEach(point => {
+      ctx.lineTo(point.x * zoom, point.y * zoom);
+    });
+    ctx.strokeStyle = stroke.color;
+    ctx.lineWidth = scaledWidth;
+    ctx.stroke();
+  };
+
+  const drawAnnotations = (ctx, annotations) => {
+    annotations.forEach(item => {
+      if (!item || !item.type) return;
+
+      switch (item.type) {
+        case 'pen':
+          drawStroke(ctx, item);
+          break;
+        case 'line':
+          drawLine(ctx, item);
+          break;
+        case 'shape':
+          drawShape(ctx, item);
+          break;
+        case 'text':
+          drawText(ctx, item);
+          break;
+        default:
+          break;
+      }
+    });
+  };
+
+  useEffect(() => {
+    if (selectedMap && selectedFloor) {
+      redrawCanvas();
+    }
+  }, [selectedMap, selectedFloor]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+  
+    const resizeObserver = new ResizeObserver(() => {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+      redrawCanvas();
+    });
+  
+    resizeObserver.observe(canvas);
+    return () => resizeObserver.disconnect();
+  }, []);
+
+  
+
+
 
   useEffect(() => {
 
@@ -126,6 +256,7 @@ const App = () => {
     const ctx = canvas.getContext('2d');
     let drawing = false;
     let startX = 0, startY = 0;
+    let currentStroke = null;
   
     const resizeCanvas = () => {
       canvas.width = canvas.offsetWidth;
@@ -145,66 +276,99 @@ const App = () => {
     };
   
     const startDrawing = (e) => {
-      e.preventDefault(); // Prevent scrolling on touch devices
+      e.preventDefault();
       const pos = getPos(e);
-      startX = pos.x;
-      startY = pos.y;
+      startX = pos.x / zoom;
+      startY = pos.y / zoom;
       drawing = true;
-  
-      if (currentTool === 'text') {
-        const text = prompt('Enter text:');
-        if (text) {
-          ctx.fillStyle = 'red';
-          ctx.font = '20px Arial';
-          ctx.fillText(text, startX, startY);
-        }
-        drawing = false;
-      } else if (currentTool === 'eraser') {
-        ctx.clearRect(startX, startY, 20, 20); // Larger eraser for touch
-      } else if (currentTool === 'pen') {
-        ctx.beginPath();
-        ctx.moveTo(startX, startY);
+    
+      switch (currentTool) {
+        case 'pen':
+          currentStroke = {
+            type: 'pen',
+            color: 'red',
+            width: 3,
+            points: [{ x: startX, y: startY }],
+          };
+          break;
+        case 'line':
+          currentStroke = {
+            type: 'line',
+            color: 'blue',
+            width: 3,
+            points: [{ x: startX, y: startY }],
+          };
+          break;
+        case 'shape':
+          currentStroke = {
+            type: 'shape',
+            color: 'green',
+            width: 3,
+            x: startX,
+            y: startY,
+            widthPx: 0,
+            heightPx: 0,
+          };
+          break;
       }
     };
-  
+    
     const draw = (e) => {
       if (!drawing) return;
-      e.preventDefault(); // Prevent scrolling
+      e.preventDefault();
       const pos = getPos(e);
-  
-      if (currentTool === 'pen') {
-        ctx.lineTo(pos.x, pos.y);
-        ctx.strokeStyle = 'red';
-        ctx.lineWidth = 3; // Slightly thicker for mobile
-        ctx.stroke();
-      } else if (currentTool === 'eraser') {
-        ctx.clearRect(pos.x - 10, pos.y - 10, 20, 20);
+      const canvasPos = {
+        x: pos.x / zoom,
+        y: pos.y / zoom,
+      };
+    
+      switch (currentTool) {
+        case 'pen':
+          currentStroke.points.push(canvasPos);
+          break;
+        case 'line':
+          currentStroke.points = [
+            { x: startX, y: startY },
+            canvasPos
+          ];
+          break;
+        case 'shape':
+          currentStroke.widthPx = canvasPos.x - startX;
+          currentStroke.heightPx = canvasPos.y - startY;
+          break;
+      }
+    
+      // Clear and redraw
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const floorKey = getCurrentFloorKey();
+      const currentAnnotations = floorAnnotations[floorKey] || [];
+      drawAnnotations(ctx, currentAnnotations);
+      
+      if (currentStroke) {
+        switch (currentStroke.type) {
+          case 'pen':
+            drawStroke(ctx, currentStroke);
+            break;
+          case 'line':
+            drawLine(ctx, currentStroke);
+            break;
+          case 'shape':
+            drawShape(ctx, currentStroke);
+            break;
+        }
       }
     };
   
     const stopDrawing = (e) => {
       if (!drawing) return;
-      const pos = getPos(e);
-  
-      if (currentTool === 'line') {
-        ctx.beginPath();
-        ctx.moveTo(startX, startY);
-        ctx.lineTo(pos.x, pos.y);
-        ctx.strokeStyle = 'blue';
-        ctx.lineWidth = 3;
-        ctx.stroke();
-      } else if (currentTool === 'shape') {
-        const width = pos.x - startX;
-        const height = pos.y - startY;
-        ctx.strokeStyle = 'green';
-        ctx.lineWidth = 3;
-        ctx.strokeRect(startX, startY, width, height);
-      }
-  
       drawing = false;
-      ctx.closePath();
+
+      if(currentStroke){
+        saveAnnotationToFloor(currentStroke);
+        currentStroke = null;
+      }
     };
-  
+
     // Add touch events alongside mouse events
     canvas.addEventListener('mousedown', startDrawing);
     canvas.addEventListener('mousemove', draw);
@@ -230,7 +394,21 @@ const App = () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
 
-  }, [currentTool, selectedMap, selectedFloor, zoom]);
+  }, [currentTool, selectedMap, selectedFloor, zoom, floorAnnotations]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext('2d');
+    if (!canvas || !ctx) return;
+  
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+    const floorKey = getCurrentFloorKey();
+    if (!floorKey) return;
+  
+    const currentAnnotations = floorAnnotations[floorKey] || [];
+    drawAnnotations(ctx, currentAnnotations);
+  }, [floorAnnotations, zoom, selectedFloor, selectedMap]);
 
   const renderToolButtons = () => (
     <>
@@ -244,14 +422,14 @@ const App = () => {
         icon="fas fa-trash-alt"
         current={currentTool}
         setCurrent={setCurrentTool}
-        customOnClick={() => {
-          const canvas = canvasRef.current;
-          const ctx = canvas?.getContext('2d');
-          if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
-        }}
+        customOnClick={clearCurrentFloorAnnotations}
       />
     </>
   );
+
+  const handleFloorSelect = (floor) => {
+    setSelectedFloor(floor);
+  };
 
   const ToolButton = ({ label, icon, current, setCurrent, customOnClick = null }) => (
     <div
@@ -384,29 +562,13 @@ const App = () => {
           <h1 className="text-3xl font-bold text-gray-800">Welcome to R6 Siege Map Annotations</h1>
           <p className="text-lg text-gray-600">Select a map, choose a floor, and start annotating!</p>
 
-          {/* Floor selection buttons */}
-          {selectedMap && (
-                      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-30 flex gap-2 bg-white/80 p-2 rounded shadow fixed">
-                          {selectedMap.floors.map((floor) => (
-                            <button
-                              key={floor.name}
-                              className={`px-3 py-1 rounded font-semibold ${
-                                selectedFloor?.name === floor.name ? 'bg-blue-500 text-white' : 'bg-white text-gray-700'}`}
-                              onClick={() => setSelectedFloor(floor)}>
-                              {floor.name}
-                            </button>
-                          ))}
-                        </div>
-                    )}
-
           <div className={`flex ${toolLayout === 'vertical' ? 'flex-row' : 'flex-col'} gap-6 flex-1 overflow-hidden`}>
             {toolLayout === 'vertical' && <div className="flex flex-col gap-2 w-28 shrink-0">{renderToolButtons()}</div>}
           
-
+            
             {/* Map Viewer */}
             <div className="relative bg-gray-200 flex-1 flex justify-center items-center rounded overflow-hidden">
               <div className="w-full h-full overflow-auto relative cursor-grab active:cursor-grabbing"
-                  ref={scrollRef}
                   style={{
                     display: 'flex',
                     justifyContent: 'center',
@@ -437,6 +599,23 @@ const App = () => {
                     zoomRef.current = newZoom;
                     setZoom(newZoom);
                   }}>
+
+                  {/* Floor selection buttons */}
+                  {selectedMap && (
+                              <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-30 flex gap-2 bg-white/80 p-2 rounded shadow">
+                                  {selectedMap.floors.map((floor) => (
+                                    <button
+                                      key={floor.name}
+                                      className={`px-3 py-1 rounded font-semibold ${
+                                        selectedFloor?.name === floor.name ? 'bg-blue-500 text-white' : 'bg-white text-gray-700'}`}
+                                      onClick={() => handleFloorSelect(floor)}>
+                                      {floor.name}
+                                    </button>
+                                  ))}
+                                </div>
+                            )}
+
+
                   <div className="relative flex-1 h-full flex justify-center items-center">
                     { /*Scrollable Area*/}
                     <div
@@ -554,6 +733,12 @@ export default () => (
 // work where the mouse/input is rather than where it
 // is in space, when zoomed the drawing is not in the right place
 
-//could move position of floor buttons
+// could move position of floor buttons
 
-// need to add gadgets and things menu 
+// need to add gadgets and things menu for each operator
+// this includes an area for each character used
+
+// Anotation Tools remove Other annotation tools,
+// need to allow multiple on the canvas at once
+
+// need to add a way to keep the canvas for each floor saved 
