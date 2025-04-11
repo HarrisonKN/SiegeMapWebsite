@@ -1,0 +1,25 @@
+
+// Notes:
+
+// positioning of things gets weird when zooming
+//need to maintain position of operators and drawings
+//when zooming and also need to make the pen tool
+// work where the mouse/input is rather than where it
+// is in space, when zoomed the drawing is not in the right place
+
+// could move position of floor buttons
+
+// need to add gadgets and things menu for each operator
+// this includes an area for each character used
+
+//I think i want to adjust how the scrolling, zoomng and panning works,
+//I would like to have it so that, using the scroll wheel just zooms in and out?
+// then holding a ctrl + scroll would move the map up and down
+// holding shift + scroll would move the map sideways
+
+
+// ALL ANNOTATIONS ARE OFFSET TO THE mouse
+
+//  Eraser only works with clicking and not holding
+
+// Annotations stay on the floor they are drawn on even after switching to a new map, I think this is a good thing, but just noting behaviours

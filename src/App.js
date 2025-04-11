@@ -30,6 +30,12 @@ const App = () => {
   const zoomRef = useRef(zoom);
   const lastZoomCenter = useRef(null);
 
+
+
+
+
+
+
   const redrawCanvas = () => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext('2d');
@@ -40,14 +46,19 @@ const App = () => {
     if (!floorKey) return;
   
     const currentAnnotations = floorAnnotations[floorKey] || [];
+    ctx.save();
     drawAnnotations(ctx, currentAnnotations);
+    ctx.restore();
   };
 
+
+  // Handle map selection and removes the floor, used for when moving to a new map selection after being on a floor
   const handleMapSelect = (map) => {
     setSelectedMap(map);
     setSelectedFloor(null);
   };
 
+  // Handle operator placement onto the screen
   const handleDrop = (e) => {
     e.preventDefault();
     const rect = e.target.getBoundingClientRect();
@@ -63,7 +74,6 @@ const App = () => {
       });
       return;
     }
-  
     const data = e.dataTransfer.getData('operator');
     if (data) {
       const operator = JSON.parse(data);
@@ -71,22 +81,23 @@ const App = () => {
     }
   };
 
-
+  // Save the current floor key to the state
   const getCurrentFloorKey = () => {
     if (!selectedMap || !selectedFloor) return null;
     return `${selectedMap.id}_${selectedFloor.name}`;
   };
   
+  // Save the annotation to the current floor
   const saveAnnotationToFloor = (annotation) => {
     const floorKey = getCurrentFloorKey();
     if (!floorKey) return;
-  
     setFloorAnnotations(prev => ({
       ...prev,
       [floorKey]: [...(prev[floorKey] || []), annotation]
     }));
   };
   
+  //clears the current floor annotations
   const clearCurrentFloorAnnotations = () => {
     const floorKey = getCurrentFloorKey();
     if (!floorKey) return;
@@ -98,6 +109,7 @@ const App = () => {
   };
 
 
+  // Handle zooming in and out
   useLayoutEffect(() => {
     const container = scrollRef.current;
     if (!container || !lastZoomCenter.current) return;
@@ -112,6 +124,7 @@ const App = () => {
     lastZoomCenter.current = null;
   }, [zoom]);
   
+  // Handle scrolling to center the map // dont know if this is needed
   useEffect(() => {
     const container = scrollRef.current;
     if (!container || !mapSize.width || !mapSize.height) return;
@@ -130,6 +143,8 @@ const App = () => {
     });
   }, [mapSize.width, mapSize.height, zoom, selectedMap]); 
 
+
+  // Draw the LINE annotation on the canvas
   const drawLine = (ctx, item) => {
     ctx.beginPath();
     ctx.moveTo(item.points[0].x * zoom, item.points[0].y * zoom);
@@ -139,6 +154,7 @@ const App = () => {
     ctx.stroke();
   };
 
+  // Draw the SHAPE annotation on the canvas
   const drawShape = (ctx, item) => {
     ctx.strokeStyle = item.color;
     ctx.lineWidth = item.width * zoom;
@@ -150,17 +166,19 @@ const App = () => {
     );
   };
 
+  // Draw the TEXT annotation on the canvas
   const drawText = (ctx, item) => {
     ctx.fillStyle = item.color;
     ctx.font = `${item.size * zoom}px Arial`;
     ctx.fillText(item.text, item.x * zoom, item.y * zoom);
   };
 
+
+  // Draw the STROKE / PEN annotation on the canvas
   const drawStroke = (ctx, stroke) => {
     if (!stroke.points.length) return;
     
     const scaledWidth = stroke.width * zoom;
-    
     ctx.beginPath();
     ctx.moveTo(stroke.points[0].x * zoom, stroke.points[0].y * zoom);
     stroke.points.slice(1).forEach(point => {
@@ -195,9 +213,13 @@ const App = () => {
   };
 
   useEffect(() => {
-    if (selectedMap && selectedFloor) {
-      redrawCanvas();
-    }
+    if (!selectedMap || !selectedFloor) return;
+  
+    const img = new Image();
+    img.onload = () => {
+      setMapSize({ width: img.width, height: img.height });
+    };
+    img.src = selectedFloor?.image || selectedMap.thumbnail;
   }, [selectedMap, selectedFloor]);
 
   useEffect(() => {
@@ -219,7 +241,6 @@ const App = () => {
 
 
   useEffect(() => {
-
     const img = new Image();
     img.src = selectedFloor?.image || selectedMap?.thumbnail;
     img.onload = () => { 
@@ -231,7 +252,7 @@ const App = () => {
     const handleKeyDown = (e) => {
       const container = scrollRef.current;
       if (!container) return;
-  
+
       const scrollSpeed = 40; // Change this to make it faster/slower
       switch (e.key) {
         case 'ArrowLeft':
@@ -240,7 +261,7 @@ const App = () => {
         case 'ArrowRight':
           container.scrollLeft += scrollSpeed;
           break;
-        case 'ArrowUp':
+          case 'ArrowUp':
           container.scrollTop -= scrollSpeed;
           break;
         case 'ArrowDown':
@@ -248,7 +269,6 @@ const App = () => {
           break;
       }
     };
-
 
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -261,12 +281,11 @@ const App = () => {
     const resizeCanvas = () => {
       canvas.width = canvas.offsetWidth;
       canvas.height = canvas.offsetHeight;
+      redrawCanvas();
     };
-    resizeCanvas();
   
     const getPos = (e) => {
       const rect = canvas.getBoundingClientRect();
-      // Handle both mouse and touch events
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
       const clientY = e.touches ? e.touches[0].clientY : e.clientY;
       return {
@@ -281,7 +300,7 @@ const App = () => {
       startX = pos.x / zoom;
       startY = pos.y / zoom;
       drawing = true;
-    
+  
       switch (currentTool) {
         case 'pen':
           currentStroke = {
@@ -310,18 +329,65 @@ const App = () => {
             heightPx: 0,
           };
           break;
+          case 'text':
+            const userText = prompt('Enter text:');
+            if (userText) {
+              saveAnnotationToFloor({
+                type: 'text',
+                text: userText,
+                x: startX,
+                y: startY,
+                color: 'Yellow',
+                size: 20,
+              });
+            }
+            drawing = false;
+            break;
       }
     };
-    
+  
     const draw = (e) => {
       if (!drawing) return;
       e.preventDefault();
       const pos = getPos(e);
-      const canvasPos = {
-        x: pos.x / zoom,
-        y: pos.y / zoom,
+
+      const isPointNear = (x1, y1, x2, y2, threshold = 10) => {
+        const dx = x1 - x2;
+        const dy = y1 - y2;
+        return dx * dx + dy * dy <= threshold * threshold;
       };
-    
+  
+      if (currentTool === 'eraser') {
+        const pos = getPos(e);
+        const x = pos.x;
+        const y = pos.y;
+        const floorKey = getCurrentFloorKey();
+      
+        setFloorAnnotations(prev => {
+          const current = prev[floorKey] || [];
+          const updated = current.filter(item => {
+            if (item.type === 'pen' || item.type === 'line') {
+              return !item.points.some(p => isPointNear(p.x, p.y, x, y, 10));
+            } else if (item.type === 'shape') {
+              const withinX = x >= item.x && x <= item.x + item.widthPx;
+              const withinY = y >= item.y && y <= item.y + item.heightPx;
+              return !(withinX && withinY);
+            } else if (item.type === 'text') {
+              return !isPointNear(item.x, item.y, x, y, 10);
+            }
+            return true;
+          });
+          return { ...prev, [floorKey]: updated };
+        });
+      
+        return;
+      }
+  
+      const canvasPos = {
+        x: pos.x,
+        y: pos.y,
+      };
+  
       switch (currentTool) {
         case 'pen':
           currentStroke.points.push(canvasPos);
@@ -329,7 +395,7 @@ const App = () => {
         case 'line':
           currentStroke.points = [
             { x: startX, y: startY },
-            canvasPos
+            canvasPos,
           ];
           break;
         case 'shape':
@@ -337,13 +403,11 @@ const App = () => {
           currentStroke.heightPx = canvasPos.y - startY;
           break;
       }
-    
-      // Clear and redraw
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       const floorKey = getCurrentFloorKey();
       const currentAnnotations = floorAnnotations[floorKey] || [];
       drawAnnotations(ctx, currentAnnotations);
-      
+  
       if (currentStroke) {
         switch (currentStroke.type) {
           case 'pen':
@@ -362,13 +426,13 @@ const App = () => {
     const stopDrawing = (e) => {
       if (!drawing) return;
       drawing = false;
-
-      if(currentStroke){
+  
+      if (currentStroke) {
         saveAnnotationToFloor(currentStroke);
         currentStroke = null;
       }
     };
-
+  
     // Add touch events alongside mouse events
     canvas.addEventListener('mousedown', startDrawing);
     canvas.addEventListener('mousemove', draw);
@@ -387,13 +451,6 @@ const App = () => {
       canvas.removeEventListener('touchend', stopDrawing);
       window.removeEventListener('resize', resizeCanvas);
     };
-
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-
   }, [currentTool, selectedMap, selectedFloor, zoom, floorAnnotations]);
 
   useEffect(() => {
@@ -721,24 +778,3 @@ export default () => (
     <App />
   </AppProvider>
 );
-
-
-
-// Notes:
-// Pen Tool drawing gets removed when zooming
-
-// positioning of things gets weird when zooming
-//need to maintain position of operators and drawings
-//when zooming and also need to make the pen tool
-// work where the mouse/input is rather than where it
-// is in space, when zoomed the drawing is not in the right place
-
-// could move position of floor buttons
-
-// need to add gadgets and things menu for each operator
-// this includes an area for each character used
-
-// Anotation Tools remove Other annotation tools,
-// need to allow multiple on the canvas at once
-
-// need to add a way to keep the canvas for each floor saved 
