@@ -1,16 +1,8 @@
+NOTES
 
-// Notes:
-
-// positioning of things gets weird when zooming
-//need to maintain position of operators and drawings
-//when zooming and also need to make the pen tool
-// work where the mouse/input is rather than where it
-// is in space, when zoomed the drawing is not in the right place
-
-// could move position of floor buttons
-
-// need to add gadgets and things menu for each operator
-// this includes an area for each character used
+---------------------------------------------------------------------------------------------------------------
+ITEMS TO FIX
+could move position of floor buttons
 
 //I think i want to adjust how the scrolling, zoomng and panning works,
 //I would like to have it so that, using the scroll wheel just zooms in and out?
@@ -18,8 +10,32 @@
 // holding shift + scroll would move the map sideways
 
 
-// ALL ANNOTATIONS ARE OFFSET TO THE mouse
+Zoom buttons disappear when switched to vertical tool layout
 
-//  Eraser only works with clicking and not holding
+Erasers function has some not expected behaviours
 
-// Annotations stay on the floor they are drawn on even after switching to a new map, I think this is a good thing, but just noting behaviours
+add another button so that you dont have a tool selected the whole time 
+(when moving operators when holding a pen, you can miss the operator and start drawing which is not wanted)
+
+
+
+---------------------------------------------------------------------------------------------------------------
+FUTURE IDEAS
+
+When switching tools, after clicking on each tool, have a description box show up with a quick explanation on how the tool works and the behaviours that can be expected
+
+need to add gadgets and things menu for each operator
+this includes an area for each character used
+
+live streaming / collaboration of site setup. 1 person is creating x amount are watching
+
+Adding user accounts/ profiles -> followers maybe -> saving / posting site setups from their accounts
+\/\/\/
+Global market??? of site setups that anyone can view and save
+
+
+
+
+---------------------------------------------------------------------------------------------------------------
+BEHAVIOURS
+// Annotations stay on the floor they are drawn on even after switching to a new map, I think this is a good thing, just noting behaviours
