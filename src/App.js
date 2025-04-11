@@ -41,9 +41,15 @@ const App = () => {
     const ctx = canvas?.getContext('2d');
     if (!canvas || !ctx) return;
   
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
     const floorKey = getCurrentFloorKey();
     if (!floorKey) return;
+
+    const zoomedWidth = mapSize.width * zoom;
+    const zoomedHeight = mapSize.height * zoom;
+    canvas.width = zoomedWidth;
+    canvas.height = zoomedHeight;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
   
     const currentAnnotations = floorAnnotations[floorKey] || [];
     ctx.save();
@@ -126,22 +132,24 @@ const App = () => {
   
   // Handle scrolling to center the map // dont know if this is needed
   useEffect(() => {
-    const container = scrollRef.current;
-    if (!container || !mapSize.width || !mapSize.height) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
   
-    const containerWidth = container.clientWidth;
-    const containerHeight = container.clientHeight;
-    const zoomedWidth = mapSize.width * zoom;
-    const zoomedHeight = mapSize.height * zoom;
+    const resizeCanvas = () => {
+      const zoomedWidth = mapSize.width * zoom;
+      const zoomedHeight = mapSize.height * zoom;
   
-    const scrollX = Math.max((zoomedWidth - containerWidth) / 2, 0);
-    const scrollY = Math.max((zoomedHeight - containerHeight) / 2, 0);
+      canvas.width = zoomedWidth;
+      canvas.height = zoomedHeight;
   
-    requestAnimationFrame(() => {
-      container.scrollLeft = scrollX;
-      container.scrollTop = scrollY;
-    });
-  }, [mapSize.width, mapSize.height, zoom, selectedMap]); 
+      redrawCanvas();
+    };
+  
+    const resizeObserver = new ResizeObserver(resizeCanvas);
+    resizeObserver.observe(canvas);
+  
+    return () => resizeObserver.disconnect();
+  }, [mapSize.width, mapSize.height, zoom]);
 
 
   // Draw the LINE annotation on the canvas
@@ -347,47 +355,46 @@ const App = () => {
     };
   
     const draw = (e) => {
-      if (!drawing) return;
+      if (!drawing && currentTool !== 'eraser') return; // Allow erasing even if not "drawing"
       e.preventDefault();
       const pos = getPos(e);
-
+    
       const isPointNear = (x1, y1, x2, y2, threshold = 10) => {
         const dx = x1 - x2;
         const dy = y1 - y2;
         return dx * dx + dy * dy <= threshold * threshold;
       };
-  
+    
       if (currentTool === 'eraser') {
-        const pos = getPos(e);
-        const x = pos.x;
-        const y = pos.y;
+        const x = pos.x / zoom;
+        const y = pos.y / zoom;
         const floorKey = getCurrentFloorKey();
-      
-        setFloorAnnotations(prev => {
+    
+        setFloorAnnotations((prev) => {
           const current = prev[floorKey] || [];
-          const updated = current.filter(item => {
+          const updated = current.filter((item) => {
             if (item.type === 'pen' || item.type === 'line') {
-              return !item.points.some(p => isPointNear(p.x, p.y, x, y, 10));
+              return !item.points.some((p) => isPointNear(p.x, p.y, x, y, 10 / zoom));
             } else if (item.type === 'shape') {
               const withinX = x >= item.x && x <= item.x + item.widthPx;
               const withinY = y >= item.y && y <= item.y + item.heightPx;
               return !(withinX && withinY);
             } else if (item.type === 'text') {
-              return !isPointNear(item.x, item.y, x, y, 10);
+              return !isPointNear(item.x, item.y, x, y, 10 / zoom);
             }
             return true;
           });
           return { ...prev, [floorKey]: updated };
         });
-      
+    
         return;
       }
-  
+    
       const canvasPos = {
-        x: pos.x,
-        y: pos.y,
+        x: pos.x / zoom,
+        y: pos.y / zoom,
       };
-  
+    
       switch (currentTool) {
         case 'pen':
           currentStroke.points.push(canvasPos);
@@ -403,11 +410,12 @@ const App = () => {
           currentStroke.heightPx = canvasPos.y - startY;
           break;
       }
+    
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       const floorKey = getCurrentFloorKey();
       const currentAnnotations = floorAnnotations[floorKey] || [];
       drawAnnotations(ctx, currentAnnotations);
-  
+    
       if (currentStroke) {
         switch (currentStroke.type) {
           case 'pen':
@@ -638,23 +646,35 @@ const App = () => {
                     e.preventDefault();
                     const container = scrollRef.current;
                     if (!container) return;
-
+                  
                     const rect = container.getBoundingClientRect();
                     const mouseX = e.clientX - rect.left;
                     const mouseY = e.clientY - rect.top;
-
+                  
                     const scrollLeft = container.scrollLeft;
                     const scrollTop = container.scrollTop;
-
-                    const zoomCenterX = scrollLeft + mouseX;
-                    const zoomCenterY = scrollTop + mouseY;
-
+                  
+                    // Calculate the center of the viewport
+                    const viewportCenterX = scrollLeft + container.clientWidth / 2;
+                    const viewportCenterY = scrollTop + container.clientHeight / 2;
+                  
                     const oldZoom = zoomRef.current;
                     const newZoom = e.deltaY < 0 ? Math.min(zoom + 0.1, 3) : Math.max(zoom - 0.1, 0.5);
-
-                    lastZoomCenter.current = { x: zoomCenterX, y: zoomCenterY };
+                  
+                    // Calculate the scale factor
+                    const scale = newZoom / oldZoom;
+                  
+                    // Adjust scroll position to keep the center of the viewport in place
+                    const newScrollLeft = viewportCenterX * scale - container.clientWidth / 2;
+                    const newScrollTop = viewportCenterY * scale - container.clientHeight / 2;
+                  
+                    container.scrollLeft = newScrollLeft;
+                    container.scrollTop = newScrollTop;
+                  
                     zoomRef.current = newZoom;
                     setZoom(newZoom);
+                  
+                    redrawCanvas();
                   }}>
 
                   {/* Floor selection buttons */}
@@ -676,29 +696,23 @@ const App = () => {
                   <div className="relative flex-1 h-full flex justify-center items-center">
                     { /*Scrollable Area*/}
                     <div
-                      className="w-full h-full overflow-auto relative cursor-grab active:cursor-grabbing"
+                      className="relative flex-1 h-full flex justify-center items-center"
                       ref={scrollRef}>
                       {selectedMap ? (
                         <div
                           style={{
                             transform: `scale(${zoom})`,
+                            transformOrigin: 'center center',
                             transition: 'transform 0.1s ease-out',
                             position: 'relative',
-                            width: '100%',
-                            height: '100%',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center'
+                            width: `${mapSize.width}px`,
+                            height: `${mapSize.height}px`,
                           }}>
                           {/* Map Image */}
                           <img
                             src={selectedFloor?.image || selectedMap.thumbnail}
                             alt={`${selectedMap.name} - ${selectedFloor?.name || 'Overview'}`}
-                            className="absolute w-full h-full pointer-events-none object-contain"
-                            style={{
-                              width: `100%`,
-                              height: `100%`
-                            }}
+                            className="absolute inset-0 w-full h-full object-contain pointer-events-none"
                           />
 
                           {/* Placed Operators */}
@@ -727,8 +741,10 @@ const App = () => {
                           <canvas
                             ref={canvasRef}
                             className="absolute top-0 left-0 w-full h-full"
-                            width={mapSize.width}
-                            height={mapSize.height}
+                            style={{
+                              width: `${mapSize.width}px`,
+                              height: `${mapSize.height}px`,
+                            }}
                             onDrop={handleDrop}
                             onDragOver={(e) => e.preventDefault()}
                           />
