@@ -172,7 +172,34 @@ const App = () => {
       item.widthPx * zoom,
       item.heightPx * zoom
     );
+
+    if (item.image) {
+      if (!item._cachedImage) {
+        const img = new Image();
+        img.src = item.image;
+        img.onload = () => {
+          item._cachedImage = img; // Cache the loaded image
+          ctx.drawImage(
+            img,
+            item.x * zoom,
+            item.y * zoom,
+            item.widthPx * zoom,
+            item.heightPx * zoom
+          );
+        };
+      } else {
+        ctx.drawImage(
+          item._cachedImage,
+          item.x * zoom,
+          item.y * zoom,
+          item.widthPx * zoom,
+          item.heightPx * zoom
+        );
+      }
+    }
   };
+
+  
 
   // Draw the TEXT annotation on the canvas
   const drawText = (ctx, item) => {
@@ -335,6 +362,7 @@ const App = () => {
             y: startY,
             widthPx: 0,
             heightPx: 0,
+            image: 'https://i.redd.it/tg38bmozyek31.jpg'
           };
           break;
           case 'text':
@@ -369,24 +397,41 @@ const App = () => {
         const x = pos.x / zoom;
         const y = pos.y / zoom;
         const floorKey = getCurrentFloorKey();
-    
+      
         setFloorAnnotations((prev) => {
           const current = prev[floorKey] || [];
           const updated = current.filter((item) => {
             if (item.type === 'pen' || item.type === 'line') {
+              // Check if any point in the stroke is near the eraser
               return !item.points.some((p) => isPointNear(p.x, p.y, x, y, 10 / zoom));
             } else if (item.type === 'shape') {
-              const withinX = x >= item.x && x <= item.x + item.widthPx;
-              const withinY = y >= item.y && y <= item.y + item.heightPx;
+              // Normalize the shape's bounding box
+              const x1 = Math.min(item.x, item.x + item.widthPx);
+              const x2 = Math.max(item.x, item.x + item.widthPx);
+              const y1 = Math.min(item.y, item.y + item.heightPx);
+              const y2 = Math.max(item.y, item.y + item.heightPx);
+      
+              // Check if the eraser overlaps with the normalized bounding box
+              const withinX = x >= x1 && x <= x2;
+              const withinY = y >= y1 && y <= y2;
               return !(withinX && withinY);
             } else if (item.type === 'text') {
+              // Check if the eraser is near the text position
               return !isPointNear(item.x, item.y, x, y, 10 / zoom);
             }
             return true;
           });
+      
+          // Clear cached images for erased shapes
+          current.forEach((item) => {
+            if (!updated.includes(item) && item.type === 'shape' && item._cachedImage) {
+              delete item._cachedImage;
+            }
+          });
+      
           return { ...prev, [floorKey]: updated };
         });
-    
+      
         return;
       }
     
@@ -439,6 +484,7 @@ const App = () => {
         saveAnnotationToFloor(currentStroke);
         currentStroke = null;
       }
+      redrawCanvas();
     };
   
     // Add touch events alongside mouse events
