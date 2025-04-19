@@ -8,9 +8,9 @@ const AuthPage = () => {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto bg-gray-100 justify-center items-center">
-      <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
-        <h1 className="text-2xl font-bold mb-4 text-center">
+  <div className="flex w-full h-full bg-gray-100 justify-center items-center">
+    <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
+      <h1 className="text-2xl font-bold mb-4 text-center">
           {isLogin ? 'Login' : 'Register'}
         </h1>
         <form>

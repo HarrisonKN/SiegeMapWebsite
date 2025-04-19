@@ -34,6 +34,8 @@ const App = () => {
   const [annotations, setAnnotations] = useState([]);
   const [floorAnnotations, setFloorAnnotations] = useState({});
 
+  const [user, setUser] = useState(null);
+
   const canvasRef = useRef(null);
   const { zoom, setZoom } = useAppContext();
   const scrollRef = useRef(null);
@@ -115,13 +117,15 @@ const App = () => {
   
       // 3. Draw all other annotations (pen, line, text)
       currentAnnotations.forEach((item) => {
-        if (item.type === 'shape') return; // Already handled
         switch (item.type) {
           case 'pen':
             drawStroke(saveCtx, item, 1);
             break;
           case 'line':
             drawLine(saveCtx, item, 1);
+            break;
+          case 'shape':
+            drawShape(saveCtx, item, 1);
             break;
           case 'text':
             drawText(saveCtx, item, 1);
@@ -150,8 +154,15 @@ const App = () => {
       await Promise.all(operatorPromises);
   
       // 5. Save the canvas as an image
+      let mapName = selectedMap?.name || 'map';
+      let floorName = selectedFloor?.name || 'floor';
+      // Clean up names for file system
+      mapName = mapName.replace(/\s+/g, '_').replace(/[^\w\-]/g, '');
+      floorName = floorName.replace(/\s+/g, '_').replace(/[^\w\-]/g, '');
+      const fileName = `${mapName}_${floorName}_annotations.png`;
+
       const link = document.createElement('a');
-      link.download = 'map-annotations.png';
+      link.download = fileName;
       link.href = saveCanvas.toDataURL('image/png');
       link.click();
     };
@@ -279,74 +290,58 @@ const App = () => {
 
 
   // Draw the LINE annotation on the canvas
-  const drawLine = (ctx, item) => {
+  const drawLine = (ctx, item, scale = zoom) => {
     ctx.beginPath();
-    ctx.moveTo(item.points[0].x * zoom, item.points[0].y * zoom);
-    ctx.lineTo(item.points[1].x * zoom, item.points[1].y * zoom);
+    ctx.moveTo(item.points[0].x * scale, item.points[0].y * scale);
+    ctx.lineTo(item.points[1].x * scale, item.points[1].y * scale);
     ctx.strokeStyle = item.color;
-    ctx.lineWidth = item.width * zoom;
+    ctx.lineWidth = item.width * scale;
     ctx.stroke();
   };
 
   // Draw the SHAPE annotation on the canvas
-  const drawShape = (ctx, item) => {
+  const drawShape = (ctx, item, scale = zoom) => {
     ctx.strokeStyle = item.color;
-    ctx.lineWidth = item.width * zoom;
+    ctx.lineWidth = item.width * scale;
     ctx.strokeRect(
-      item.x * zoom,
-      item.y * zoom,
-      item.widthPx * zoom,
-      item.heightPx * zoom
+      item.x * scale,
+      item.y * scale,
+      item.widthPx * scale,
+      item.heightPx * scale
     );
-
     if (item.image) {
-      if (!item._cachedImage) {
-        const img = new Image();
-        img.src = item.image;
-        img.onload = () => {
-          item._cachedImage = img; // Cache the loaded image
-          ctx.drawImage(
-            img,
-            item.x * zoom,
-            item.y * zoom,
-            item.widthPx * zoom,
-            item.heightPx * zoom
-          );
-        };
-      } else {
-        ctx.drawImage(
-          item._cachedImage,
-          item.x * zoom,
-          item.y * zoom,
-          item.widthPx * zoom,
-          item.heightPx * zoom
-        );
-      }
+      const img = item._cachedImage || new window.Image();
+      img.src = item.image;
+      ctx.drawImage(
+        img,
+        item.x * scale,
+        item.y * scale,
+        item.widthPx * scale,
+        item.heightPx * scale
+      );
     }
   };
 
   
 
   // Draw the TEXT annotation on the canvas
-  const drawText = (ctx, item) => {
+  const drawText = (ctx, item, scale = zoom) => {
     ctx.fillStyle = item.color;
-    ctx.font = `${item.size * zoom}px Arial`;
-    ctx.fillText(item.text, item.x * zoom, item.y * zoom);
+    ctx.font = `${item.size * scale}px Arial`;
+    ctx.fillText(item.text, item.x * scale, item.y * scale);
   };
 
 
   // Draw the STROKE / PEN annotation on the canvas
-  const drawStroke = (ctx, stroke) => {
+  const drawStroke = (ctx, stroke, scale = zoom) => {
     if (!stroke.points.length) return;
-    
-    const scaledWidth = stroke.width * zoom;
     ctx.beginPath();
-    ctx.moveTo(stroke.points[0].x * zoom, stroke.points[0].y * zoom);
+    ctx.moveTo(stroke.points[0].x * scale, stroke.points[0].y * scale);
     stroke.points.slice(1).forEach(point => {
-      ctx.lineTo(point.x * zoom, point.y * zoom);
+      ctx.lineTo(point.x * scale, point.y * scale);
     });
     ctx.strokeStyle = stroke.color;
-    ctx.lineWidth = scaledWidth;
+    ctx.lineWidth = stroke.width * scale;
     ctx.stroke();
   };
 
@@ -671,12 +666,32 @@ const App = () => {
       <button
         className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow"
         onClick={handleSaveAsImage}>Save Setup</button>
+      
+      <div className="flex flex-col items-center ml-2">
+        <span className="text-xs text-gray-700 font-semibold mb-1">Zoom:{Math.round(zoom * 100)}%</span>
+        <div className={`flex gap-1 ${toolLayout === 'vertical' ? 'flex-col' : 'flex-row'}`}>
+          <ZoomButton label="Zoom In" icon="fas fa-search-plus" onClick={() => setZoom(prev => Math.min(prev + 0.1, 3))} />
+          <ZoomButton label="Zoom Out" icon="fas fa-search-minus" onClick={() => setZoom(prev => Math.max(prev - 0.1, 0.5))} />
+          <ZoomButton label="Reset" icon="fas fa-compress" onClick={() => setZoom(1)} />
+        </div>
+      </div>  
     </>
   );
 
   const handleFloorSelect = (floor) => {
     setSelectedFloor(floor);
   };
+
+  const ZoomButton = ({ label, icon, onClick }) => (
+    <div
+      className="p-1 sm:p-2 rounded text-center cursor-pointer hover:bg-gray-400 bg-gray-200 min-w-[36px] sm:min-w-[48px]"
+      style={{ fontSize: '0.85rem' }}
+      onClick={onClick}
+    >
+      <i className={`${icon} text-base sm:text-lg`}></i>
+      <p className="font-semibold text-[10px] sm:text-xs mt-0.5">{label}</p>
+    </div>
+  );
 
   const ToolButton = ({ label, icon, current, setCurrent, customOnClick = null }) => (
     <div
@@ -705,13 +720,26 @@ const App = () => {
         <div className="flex space-x-4">
           <Link to="/" className="bg-gray-600 px-2 sm:px-4 py-1 sm:py-2 rounded text-sm sm:text-base hover:bg-gray-500 active:bg-gray-700 transition duration-150">Home</Link>
           <Link to="/site-setups" className="bg-gray-600 px-2 sm:px-4 py-1 sm:py-2 rounded text-sm sm:text-base hover:bg-gray-500 active:bg-gray-700 transition duration-150">Site Setups</Link>
+        
         </div>
 
           {/*Top Right Menu Buttons*/}
           <div className="flex space-x-2 sm:space-x-4">
-          <Link to="/auth" className="bg-gray-600 px-2 sm:px-4 py-1 sm:py-2 rounded text-sm sm:text-base hover:bg-gray-500 active:bg-gray-700 transition duration-150">Login/Register</Link>
-          <Link to="/UserAccount" className="bg-gray-600 px-2 sm:px-4 py-1 sm:py-2 rounded text-sm sm:text-base hover:bg-gray-500 active:bg-gray-700 transition duration-150">User Account</Link>
-
+          {user ? (
+            <Link
+              to="/UserAccount"
+              className="bg-gray-600 px-2 sm:px-4 py-1 sm:py-2 rounded text-sm sm:text-base hover:bg-gray-500 active:bg-gray-700 transition duration-150"
+            >
+              Account
+            </Link>
+          ) : (
+            <Link
+              to="/auth"
+              className="bg-gray-600 px-2 sm:px-4 py-1 sm:py-2 rounded text-sm sm:text-base hover:bg-gray-500 active:bg-gray-700 transition duration-150"
+            >
+              Login/Register
+            </Link>
+          )}
             <div className="relative">
               <button
                 className="bg-gray-600 px-2 sm:px-4 py-1 sm:py-2 rounded text-sm sm:text-base hover:bg-gray-500 active:bg-gray-700 transition duration-150"
@@ -723,8 +751,11 @@ const App = () => {
                   <select
                     className="w-full p-2 border rounded"
                     value={toolLayout}
-                    onChange={(e) => setToolLayout(e.target.value)}>
-
+                    onChange={(e) => {
+                      setToolLayout(e.target.value);
+                      setShowSettings(false); // Close the settings after selection
+                    }}
+                  >
                     <option value="horizontal">Horizontal</option>
                     <option value="vertical">Vertical</option>
                   </select>
@@ -777,7 +808,6 @@ const App = () => {
                 <p className="text-lg text-gray-600">Select a map, choose a floor, and start annotating!</p>
 
                 <div className={`flex ${toolLayout === 'vertical' ? 'flex-row' : 'flex-col'} gap-6 flex-1 overflow-hidden`}>
-                  {toolLayout === 'vertical' && <div className="flex flex-col gap-2 w-28 shrink-0">{renderToolButtons()}</div>}
                 
                   
                   {/* Map Viewer */}
@@ -899,7 +929,7 @@ const App = () => {
                                 />
                               </div>
                             ) : (
-                              <div className="flex items-center justify-center w-full h-full text-xl text-gray-500">
+                              <div className="absolute inset-0 flex items-center justify-center w-full h-full text-xl text-gray-500 bg-gray-200/70">
                                 Select a map to view it here.
                               </div>
                             )}
@@ -908,14 +938,12 @@ const App = () => {
                       </div>
                   </div>
 
-                  {toolLayout === 'horizontal' && (
-                    <div className="flex flex-wrap gap-2 w-full">
+                  <div className={`flex ${toolLayout === 'vertical' ? 'flex-row' : 'flex-col'} gap-6`}>
+                    {/* Tool Buttons */}
+                    <div className={toolLayout === 'vertical' ? "flex flex-col gap-2 w-28 shrink-0 overflow-y-auto" : "flex flex-wrap gap-2 w-full"}>
                       {renderToolButtons()}
-                      <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow" onClick={() => setZoom(prev => Math.min(prev + 0.1, 3))}>Zoom In</button>
-                      <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow" onClick={() => setZoom(prev => Math.max(prev - 0.1, 0.5))}>Zoom Out</button>
-                      <p className="text-sm text-gray-700 mt-1">Zoom: {Math.round(zoom * 100)}%</p>
                     </div>
-                  )}
+                  </div>
                 </div>
               </div>
               
