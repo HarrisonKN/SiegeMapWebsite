@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useLayoutEffect, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {link} from 'react-router-dom';
 import { AppProvider, useAppContext } from './context/AppContext';
 import OperatorSidebar from './components/OperatorSidebar';
@@ -7,6 +8,9 @@ import mapsData from './components/MapData';
 import ForumPage from './components/ForumPage'; 
 import UserAccountPage from './components/UserAccountsPage';
 import AuthPage from './components/UserLoginRegPage';
+import { supabase } from './supabaseClient';
+
+import { useUser } from './context/UserContext';
 
 import MapViewer from './components/MapViewer';
 import Sidebar from './components/Sidebar';
@@ -33,8 +37,10 @@ const App = () => {
   const [mapSize, setMapSize] = useState({ width: 0, height: 0 });
   const [annotations, setAnnotations] = useState([]);
   const [floorAnnotations, setFloorAnnotations] = useState({});
+  const [showModal, setShowModal] = useState(false);
 
-  const [user, setUser] = useState(null);
+  const { user } = useUser();
+  const navigate = useNavigate();
 
   const canvasRef = useRef(null);
   const { zoom, setZoom } = useAppContext();
@@ -48,8 +54,46 @@ const App = () => {
   // Check if the current route is the home page or site setups page
   const isMainLayout = location.pathname === '/';
 
+  const handleLoadSetup = (setup) => {
+    const selectedMapObj = mapsData.find(m => m.name === setup.map_name);
+    setSelectedMap(selectedMapObj);
+    if (selectedMapObj) {
+      const selectedFloorObj = selectedMapObj.floors.find(f => f.name === setup.floor_name);
+      setSelectedFloor(selectedFloorObj);
+  
+      // Use the same key format as getCurrentFloorKey
+      if (selectedMapObj && selectedFloorObj) {
+        setFloorAnnotations(prev => ({
+          ...prev,
+          [`${selectedMapObj.id}_${selectedFloorObj.name}`]: setup.data
+        }));
+      }
+    }
+    // Optionally navigate to main view if not already there
+    if (location.pathname !== "/") {
+      navigate("/");
+    }
+  };
 
-
+  const handleSaveToAccount = async () => {
+    if (!user) {
+      alert("You must be logged in to save setups to your account.");
+      return;
+    }
+    const floorKey = getCurrentFloorKey();
+    if (!floorKey) return;
+    const setupData = floorAnnotations[floorKey] || [];
+    const mapName = selectedMap?.name || 'map';
+    const floorName = selectedFloor?.name || 'floor';
+    const title = prompt("Enter a title for this setup:") || "Untitled";
+    const error = await saveSetupToAccount({ mapName, floorName, title, setupData });
+    if (!error) {
+      alert("Setup saved to your account!");
+      setShowModal(false);
+    } else {
+      alert("Failed to save setup.");
+    }
+  };
 
   const handleSaveAsImage = async () => {
     const floorKey = getCurrentFloorKey();
@@ -172,6 +216,18 @@ const App = () => {
     };
   };
 
+  async function saveSetupToAccount({ mapName, floorName, title, setupData }) {
+    const { error } = await supabase.from('site_setups').insert([
+      {
+        user_id: user.id,
+        map_name: mapName,
+        floor_name: floorName,
+        title,
+        data: setupData,
+      }
+    ]);
+    return error;
+  }
 
   const redrawCanvas = () => {
     const canvas = canvasRef.current;
@@ -665,7 +721,24 @@ const App = () => {
       />
       <button
         className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow"
-        onClick={handleSaveAsImage}>Save Setup</button>
+        onClick={() => setShowModal(true)}>Save Setup</button>
+
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded shadow-lg">
+            <h2 className="text-xl font-bold mb-4">Save Setup</h2>
+            <button 
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow"
+              onClick={handleSaveAsImage}>Download Image</button>
+            <button 
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow"
+              onClick={handleSaveToAccount}>Save to Account</button>
+            <button
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded shadow"
+              onClick={() => setShowModal(false)}>Cancel</button>
+          </div>
+        </div>
+      )}
       
       <div className="flex flex-col items-center ml-2">
         <span className="text-xs text-gray-700 font-semibold mb-1">Zoom:{Math.round(zoom * 100)}%</span>
@@ -718,7 +791,14 @@ const App = () => {
       <div className="bg-gray-800 text-white p-4 flex justify-between items-center">
         <div className="text-lg font-semibold">R6 Siege Map Annotations</div>
         <div className="flex space-x-4">
-          <Link to="/" className="bg-gray-600 px-2 sm:px-4 py-1 sm:py-2 rounded text-sm sm:text-base hover:bg-gray-500 active:bg-gray-700 transition duration-150">Home</Link>
+          <Link to="/" className="bg-gray-600 px-2 sm:px-4 py-1 sm:py-2 rounded text-sm sm:text-base hover:bg-gray-500 active:bg-gray-700 transition duration-150"
+            onClick={() => {
+              setSelectedMap(null);
+              setSelectedFloor(null);
+              setFloorAnnotations({});
+              setPlacedOperators([]);
+            }}
+          >Home</Link>
           <Link to="/site-setups" className="bg-gray-600 px-2 sm:px-4 py-1 sm:py-2 rounded text-sm sm:text-base hover:bg-gray-500 active:bg-gray-700 transition duration-150">Site Setups</Link>
         
         </div>
@@ -958,7 +1038,7 @@ const App = () => {
               </div>
               </React.Fragment>} />
           <Route path="/site-setups" element={<ForumPage />} />
-          <Route path="/UserAccount" element={<UserAccountPage />} />
+          <Route path="/UserAccount" element={<UserAccountPage handleLoadSetup={handleLoadSetup}/>} />
           <Route path="/auth" element={<AuthPage />} />
         </Routes>
       </div>

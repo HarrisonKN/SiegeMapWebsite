@@ -5,14 +5,17 @@ import App from './App';
 import { AppProvider } from './context/AppContext';
 import './styles.css';
 import reportWebVitals from './reportWebVitals';
+import { UserProvider } from './context/UserContext';
 
 const root = ReactDOM.createRoot(document.getElementById('root')); // Ensure 'root' matches the id in index.html
 root.render(
   <React.StrictMode>
     <AppProvider>
-      <Router>
-        <App />
-      </Router>
+      <UserProvider>
+        <Router>
+          <App />
+        </Router>
+      </UserProvider>
     </AppProvider>
   </React.StrictMode>,
 );
