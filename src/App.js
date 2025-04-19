@@ -1,10 +1,12 @@
 import React, { useState, useRef, useEffect, useLayoutEffect, useContext } from 'react';
+import {link} from 'react-router-dom';
 import { AppProvider, useAppContext } from './context/AppContext';
 import OperatorSidebar from './components/OperatorSidebar';
 import OperatorData from './components/OperatorData';
 import mapsData from './components/MapData';
 import ForumPage from './components/ForumPage'; 
 import UserAccountPage from './components/UserAccountsPage';
+import AuthPage from './components/UserLoginRegPage';
 
 import MapViewer from './components/MapViewer';
 import Sidebar from './components/Sidebar';
@@ -585,6 +587,7 @@ const App = () => {
 
           {/*Top Right Menu Buttons*/}
           <div className="flex space-x-2 sm:space-x-4">
+          <Link to="/auth" className="bg-gray-600 px-2 sm:px-4 py-1 sm:py-2 rounded text-sm sm:text-base hover:bg-gray-500 active:bg-gray-700 transition duration-150">Login/Register</Link>
           <Link to="/UserAccount" className="bg-gray-600 px-2 sm:px-4 py-1 sm:py-2 rounded text-sm sm:text-base hover:bg-gray-500 active:bg-gray-700 transition duration-150">User Account</Link>
 
             <div className="relative">
@@ -806,6 +809,7 @@ const App = () => {
               </React.Fragment>} />
           <Route path="/site-setups" element={<ForumPage />} />
           <Route path="/UserAccount" element={<UserAccountPage />} />
+          <Route path="/auth" element={<AuthPage />} />
         </Routes>
       </div>
     </div>

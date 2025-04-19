@@ -1,27 +1,60 @@
 import React from 'react';
+import mapsData from './MapData';
 
 const UserAccountPage = () => {
+  // Temporary user data
+  const user = {
+    username: 'JohnDoe',
+    profilePicture: 'https://via.placeholder.com/150', // Placeholder profile picture
+  };
+
+  // Generate temporary site setups as user posts
+  const userPosts = mapsData.flatMap((map) =>
+    map.floors.map((floor, index) => ({
+      id: `${map.id}-${index}`,
+      map: map.name,
+      floor: floor.name,
+      title: `${map.name} - ${floor.name}`,
+      image: floor.image || map.thumbnail,
+    }))
+  );
+
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">User Account</h1>
-      <div className="space-y-4">
-        <div className="bg-gray-100 p-4 rounded shadow">
-          <h2 className="text-lg font-semibold">Profile Information</h2>
-          <p className="text-gray-600">Name: John Doe</p>
-          <p className="text-gray-600">Email: johndoe@example.com</p>
+    <div className="flex-1 overflow-y-auto bg-gray-100">
+      {/* Profile Section */}
+      <div className="p-4 flex flex-col items-center border-b border-gray-300">
+        <div className="w-24 h-24 rounded-full bg-green-500 flex items-center justify-center overflow-hidden">
+          <img
+            src={user.profilePicture}
+            alt={`${user.username}'s profile`}
+            className="w-full h-full object-cover"
+          />
         </div>
-        <div className="bg-gray-100 p-4 rounded shadow">
-          <h2 className="text-lg font-semibold">Recent Activity</h2>
-          <ul className="list-disc pl-5 text-gray-600">
-            <li>Commented on a post</li>
-            <li>Uploaded a map setup</li>
-            <li>Updated profile picture</li>
-          </ul>
-        </div>
-        <div className="bg-gray-100 p-4 rounded shadow">
-          <h2 className="text-lg font-semibold">Settings</h2>
-          <p className="text-gray-600">Manage your account settings here.</p>
-        </div>
+        <h1 className="text-xl font-bold mt-4">{user.username}</h1>
+      </div>
+
+      {/* User Posts Feed */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
+        {userPosts.map((post) => (
+          <div key={post.id} className="bg-white rounded-lg shadow overflow-hidden">
+            <img
+              src={post.image}
+              alt={post.title}
+              className="w-full h-32 object-cover"
+            />
+            <div className="p-2">
+              <h2 className="text-sm font-semibold">{post.title}</h2>
+              <p className="text-gray-600 text-xs mt-1">
+                <strong>Map:</strong> {post.map} | <strong>Floor:</strong> {post.floor}
+              </p>
+            </div>
+          </div>
+        ))}
+
+        {/* No Posts Message */}
+        {userPosts.length === 0 && (
+          <p className="text-center text-gray-500 mt-6 col-span-full">No posts yet.</p>
+        )}
       </div>
     </div>
   );
