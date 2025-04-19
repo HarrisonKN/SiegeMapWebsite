@@ -14,6 +14,8 @@ import AnnotationTools from './components/AnnotationTools';
 import './styles.css';
 import { clear } from '@testing-library/user-event/dist/clear';
 
+import html2canvas from 'html2canvas';
+
 
 
 import { BrowserRouter as Router, Route, Routes, Link, useLocation} from 'react-router-dom';
@@ -47,7 +49,117 @@ const App = () => {
 
 
 
-
+  const handleSaveAsImage = async () => {
+    const floorKey = getCurrentFloorKey();
+    if (!floorKey) return;
+  
+    const currentAnnotations = floorAnnotations[floorKey] || [];
+  
+    // Create a new canvas for saving the image
+    const saveCanvas = document.createElement('canvas');
+    saveCanvas.width = mapSize.width;
+    saveCanvas.height = mapSize.height;
+    const saveCtx = saveCanvas.getContext('2d');
+    if (!saveCtx) return;
+  
+    // Draw the map image onto the save canvas
+    const mapImage = new Image();
+    mapImage.crossOrigin = 'anonymous';
+    mapImage.src = selectedFloor?.image || selectedMap.thumbnail;
+  
+    mapImage.onload = async () => {
+      saveCtx.drawImage(mapImage, 0, 0, mapSize.width, mapSize.height);
+  
+      // 1. Draw all shapes (border/background) first
+      currentAnnotations.forEach((item) => {
+        if (item.type === 'shape') {
+          // Draw border/background for all shapes
+          saveCtx.save();
+          if (item.fill) {
+            saveCtx.fillStyle = item.fill;
+            saveCtx.fillRect(item.x, item.y, item.widthPx, item.heightPx);
+          }
+          saveCtx.strokeStyle = item.color || 'black';
+          saveCtx.lineWidth = item.width || 2;
+          saveCtx.strokeRect(item.x, item.y, item.widthPx, item.heightPx);
+          saveCtx.restore();
+        }
+      });
+  
+      // When saving, use the cached image if available
+      const shapeImagePromises = currentAnnotations
+      .filter((item) => item.type === 'shape' && item.image)
+      .map((shape) => {
+        return new Promise((resolve) => {
+          let img = shape._cachedImage;
+          if (img) {
+            saveCtx.drawImage(img, shape.x, shape.y, shape.widthPx, shape.heightPx);
+            resolve();
+          } else {
+            // fallback: load as before
+            const shapeImage = new Image();
+            shapeImage.crossOrigin = 'anonymous';
+            shapeImage.src = shape.image;
+            shapeImage.onload = () => {
+              saveCtx.drawImage(shapeImage, shape.x, shape.y, shape.widthPx, shape.heightPx);
+              resolve();
+            };
+            shapeImage.onerror = () => {
+              console.error(`Failed to load shape image: ${shape.image}`);
+              resolve();
+            };
+          }
+        });
+      });
+      await Promise.all(shapeImagePromises);
+  
+      // 3. Draw all other annotations (pen, line, text)
+      currentAnnotations.forEach((item) => {
+        if (item.type === 'shape') return; // Already handled
+        switch (item.type) {
+          case 'pen':
+            drawStroke(saveCtx, item, 1);
+            break;
+          case 'line':
+            drawLine(saveCtx, item, 1);
+            break;
+          case 'text':
+            drawText(saveCtx, item, 1);
+            break;
+          default:
+            break;
+        }
+      });
+  
+      // 4. Draw all operator images
+      const operatorPromises = placedOperators.map((op) => {
+        return new Promise((resolve) => {
+          const operatorImage = new Image();
+          operatorImage.crossOrigin = 'anonymous';
+          operatorImage.src = op.image;
+          operatorImage.onload = () => {
+            saveCtx.drawImage(operatorImage, op.x, op.y, 40, 40);
+            resolve();
+          };
+          operatorImage.onerror = () => {
+            console.error(`Failed to load operator image: ${op.image}`);
+            resolve();
+          };
+        });
+      });
+      await Promise.all(operatorPromises);
+  
+      // 5. Save the canvas as an image
+      const link = document.createElement('a');
+      link.download = 'map-annotations.png';
+      link.href = saveCanvas.toDataURL('image/png');
+      link.click();
+    };
+  
+    mapImage.onerror = () => {
+      console.error('Failed to load map image. Ensure the image supports cross-origin requests.');
+    };
+  };
 
 
   const redrawCanvas = () => {
@@ -376,7 +488,7 @@ const App = () => {
             y: startY,
             widthPx: 0,
             heightPx: 0,
-            image: 'https://i.redd.it/tg38bmozyek31.jpg'
+            image: '/images/ReinforcedWall.jpg'
           };
           break;
           case 'text':
@@ -537,11 +649,18 @@ const App = () => {
 
   const renderToolButtons = () => (
     <>
+      <ToolButton
+        label="Mouse"
+        icon="fas fa-mouse-pointer"
+        current={currentTool}
+        setCurrent={setCurrentTool}
+        customOnClick={() => setCurrentTool(null)} // Deselect any active tool
+      />
       <ToolButton label="Pen" icon="fas fa-pencil-alt" current={currentTool} setCurrent={setCurrentTool} />
+      <ToolButton label="Line" icon="fas fa-random" current={currentTool} setCurrent={setCurrentTool} />
       <ToolButton label="Shape" icon="fas fa-square" current={currentTool} setCurrent={setCurrentTool} />
       <ToolButton label="Text" icon="fas fa-font" current={currentTool} setCurrent={setCurrentTool} />
       <ToolButton label="Eraser" icon="fas fa-eraser" current={currentTool} setCurrent={setCurrentTool} />
-      <ToolButton label="Line" icon="fas fa-random" current={currentTool} setCurrent={setCurrentTool} />
       <ToolButton
         label="Clear"
         icon="fas fa-trash-alt"
@@ -549,6 +668,9 @@ const App = () => {
         setCurrent={setCurrentTool}
         customOnClick={clearCurrentFloorAnnotations}
       />
+      <button
+        className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow"
+        onClick={handleSaveAsImage}>Save Setup</button>
     </>
   );
 
