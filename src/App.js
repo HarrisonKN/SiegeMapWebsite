@@ -14,8 +14,7 @@ import './styles.css';
 
 
 
-import { BrowserRouter as Route, Routes, Link, useLocation} from 'react-router-dom';
-
+import { Routes, Route, Link, useLocation } from 'react-router-dom';
 
 const App = () => {
   const [selectedMap, setSelectedMap] = useState(null);
