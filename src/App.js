@@ -1,6 +1,5 @@
-import React, { useState, useRef, useEffect, useLayoutEffect, useContext } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {link} from 'react-router-dom';
 import { AppProvider, useAppContext } from './context/AppContext';
 import OperatorSidebar from './components/OperatorSidebar';
 import OperatorData from './components/OperatorData';
@@ -9,20 +8,13 @@ import ForumPage from './components/ForumPage';
 import UserAccountPage from './components/UserAccountsPage';
 import AuthPage from './components/UserLoginRegPage';
 import { supabase } from './supabaseClient';
-
 import { useUser } from './context/UserContext';
 
-import MapViewer from './components/MapViewer';
-import Sidebar from './components/Sidebar';
-import AnnotationTools from './components/AnnotationTools';
 import './styles.css';
-import { clear } from '@testing-library/user-event/dist/clear';
-
-import html2canvas from 'html2canvas';
 
 
 
-import { BrowserRouter as Router, Route, Routes, Link, useLocation} from 'react-router-dom';
+import { BrowserRouter as Route, Routes, Link, useLocation} from 'react-router-dom';
 
 
 const App = () => {
@@ -32,10 +24,9 @@ const App = () => {
   const [currentTool, setCurrentTool] = useState(null);
   const [toolLayout, setToolLayout] = useState('horizontal');
   const [showSettings, setShowSettings] = useState(false);
-  const [selectedOperator, setSelectedOperator] = useState(null);
+  const [setSelectedOperator] = useState(null);
   const [placedOperators, setPlacedOperators] = useState([]);
   const [mapSize, setMapSize] = useState({ width: 0, height: 0 });
-  const [annotations, setAnnotations] = useState([]);
   const [floorAnnotations, setFloorAnnotations] = useState({});
   const [showModal, setShowModal] = useState(false);
 
@@ -51,8 +42,6 @@ const App = () => {
   // Hook to get the current route
   const location = useLocation();
 
-  // Check if the current route is the home page or site setups page
-  const isMainLayout = location.pathname === '/';
 
   const handleLoadSetup = (setup) => {
     const selectedMapObj = mapsData.find(m => m.name === setup.map_name);
@@ -459,27 +448,6 @@ const App = () => {
       const width = img.width; 
       const height = img.height;
       setMapSize({ width, height });
-    };
-
-    const handleKeyDown = (e) => {
-      const container = scrollRef.current;
-      if (!container) return;
-
-      const scrollSpeed = 40; // Change this to make it faster/slower
-      switch (e.key) {
-        case 'ArrowLeft':
-          container.scrollLeft -= scrollSpeed;
-          break;
-        case 'ArrowRight':
-          container.scrollLeft += scrollSpeed;
-          break;
-          case 'ArrowUp':
-          container.scrollTop -= scrollSpeed;
-          break;
-        case 'ArrowDown':
-          container.scrollTop += scrollSpeed;
-          break;
-      }
     };
 
     const canvas = canvasRef.current;
@@ -905,11 +873,7 @@ const App = () => {
                           e.preventDefault();
                           const container = scrollRef.current;
                           if (!container) return;
-                        
-                          const rect = container.getBoundingClientRect();
-                          const mouseX = e.clientX - rect.left;
-                          const mouseY = e.clientY - rect.top;
-                        
+                                                
                           const scrollLeft = container.scrollLeft;
                           const scrollTop = container.scrollTop;
                         
