@@ -1,28 +1,27 @@
-import React, { useState } from 'react';
-import mapsData from './MapData';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '../supabaseClient';
 
-const ForumPage = () => {
+const ForumPage = ({handleLoadSetup}) => {
   const [filter, setFilter] = useState('');
+  const [forumSetups, setForumSetups] = useState([]);
 
-  // Generate site setups dynamically from mapsData
-  const siteSetups = mapsData.flatMap((map) =>
-    map.floors.map((floor, index) => ({
-      id: `${map.id}-${index}`, // Unique ID for each setup
-      map: map.name,
-      floor: floor.name,
-      title: `${map.name} - ${floor.name}`,
-      description: `Explore strategies for ${floor.name} on ${map.name}.`,
-      image: floor.image || map.thumbnail, // Use floor image or fallback to map thumbnail
-    }))
-  );
+  useEffect(() => {
+    supabase
+      .from('site_setups')
+      .select('*')
+      .eq('is_posted', true)
+      .then(({ data, error }) => {
+        if (!error) setForumSetups(data);
+      });
+  }, []);
 
   // Filtered setups based on the filter state
-  const filteredSetups = siteSetups.filter((setup) => {
+  const filteredSetups = forumSetups.filter((setup) => {
     const filterText = filter.toLowerCase();
     return (
-      setup.map.toLowerCase().includes(filterText) || // Match map name
-      setup.floor.toLowerCase().includes(filterText) || // Match floor name
-      setup.title.toLowerCase().includes(filterText) // Match title
+      (setup.map_name && setup.map_name.toLowerCase().includes(filterText)) ||
+      (setup.floor_name && setup.floor_name.toLowerCase().includes(filterText)) ||
+      (setup.title && setup.title.toLowerCase().includes(filterText))
     );
   });
 
@@ -44,18 +43,28 @@ const ForumPage = () => {
       {/* Site Setups Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredSetups.map((setup) => (
-          <div key={setup.id} className="bg-white rounded-lg shadow overflow-hidden">
-            <img
-              src={setup.image}
-              alt={setup.title}
-              className="w-full h-48 object-cover"
-            />
+          <div key={setup.id} 
+            className="bg-white rounded-lg shadow overflow-hidden cursor-pointer hover:ring-2 ring-blue-400 transition"
+            onClick={() => handleLoadSetup(setup)}>
+            
+            {setup.image && (
+              <img
+                src={setup.image}
+                alt={setup.title}
+                className="w-full h-48 object-cover"
+              />
+            )}
             <div className="p-4">
-              <h2 className="text-lg font-semibold">{setup.title}</h2>
+              <h2 className="text-lg font-semibold">{setup.title || 'Untitled'}</h2>
               <p className="text-gray-600 text-sm mt-1">
-                <strong>Map:</strong> {setup.map} | <strong>Floor:</strong> {setup.floor}
+                <strong>Map:</strong> {setup.map_name} | <strong>Floor:</strong> {setup.floor_name}
               </p>
-              <p className="text-gray-600 text-sm mt-2">{setup.description}</p>
+              {setup.description && (
+                <p className="text-gray-600 text-sm mt-2">{setup.description}</p>
+              )}
+              {setup.username && (
+                <p className="text-gray-500 text-xs mt-2">Posted by: {setup.username}</p>
+              )}
             </div>
           </div>
         ))}

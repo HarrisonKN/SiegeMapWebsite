@@ -21,6 +21,7 @@ const App = () => {
   const [selectedMap, setSelectedMap] = useState(null);
   const [selectedFloor, setSelectedFloor] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isOperatorSidebarOpen, setIsOperatorSidebarOpen] = useState(true);
   const [currentTool, setCurrentTool] = useState(null);
   const [toolLayout, setToolLayout] = useState('horizontal');
   const [showSettings, setShowSettings] = useState(false);
@@ -29,6 +30,11 @@ const App = () => {
   const [mapSize, setMapSize] = useState({ width: 0, height: 0 });
   const [floorAnnotations, setFloorAnnotations] = useState({});
   const [showModal, setShowModal] = useState(false);
+  const [draggedOpIndex, setDraggedOpIndex] = useState(null);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [draggingOperator, setDraggingOperator] = useState(null);
+  const [draggingTouch, setDraggingTouch] = useState(null); 
+  const [selectedOperatorToPlace, setSelectedOperatorToPlace] = useState(null);
 
   const { user } = useUser();
   const navigate = useNavigate();
@@ -46,18 +52,31 @@ const App = () => {
   const handleLoadSetup = (setup) => {
     const selectedMapObj = mapsData.find(m => m.name === setup.map_name);
     setSelectedMap(selectedMapObj);
+  
     if (selectedMapObj) {
       const selectedFloorObj = selectedMapObj.floors.find(f => f.name === setup.floor_name);
       setSelectedFloor(selectedFloorObj);
   
-      // Use the same key format as getCurrentFloorKey
+      // Set annotations
       if (selectedMapObj && selectedFloorObj) {
         setFloorAnnotations(prev => ({
           ...prev,
-          [`${selectedMapObj.id}_${selectedFloorObj.name}`]: setup.data
+          [`${selectedMapObj.id}_${selectedFloorObj.name}`]: Array.isArray(setup.data)
+            ? setup.data
+            : (setup.data?.annotations || [])
         }));
       }
     }
+  
+    // Set placed operators (support both .operators and .data.operators for compatibility)
+    if (setup.operators) {
+      setPlacedOperators(setup.operators);
+    } else if (setup.data && setup.data.operators) {
+      setPlacedOperators(setup.data.operators);
+    } else {
+      setPlacedOperators([]);
+    }
+  
     // Optionally navigate to main view if not already there
     if (location.pathname !== "/") {
       navigate("/");
@@ -75,7 +94,7 @@ const App = () => {
     const mapName = selectedMap?.name || 'map';
     const floorName = selectedFloor?.name || 'floor';
     const title = prompt("Enter a title for this setup:") || "Untitled";
-    const error = await saveSetupToAccount({ mapName, floorName, title, setupData });
+    const error = await saveSetupToAccount({ mapName, floorName, title, setupData, operators: placedOperators });
     if (!error) {
       alert("Setup saved to your account!");
       setShowModal(false);
@@ -205,14 +224,17 @@ const App = () => {
     };
   };
 
-  async function saveSetupToAccount({ mapName, floorName, title, setupData }) {
+  async function saveSetupToAccount({ mapName, floorName, title, setupData, operators }) {
     const { error } = await supabase.from('site_setups').insert([
       {
         user_id: user.id,
         map_name: mapName,
         floor_name: floorName,
         title,
-        data: setupData,
+        data: {
+          annotations: setupData,
+          operators: operators || [],
+        }
       }
     ]);
     return error;
@@ -250,9 +272,10 @@ const App = () => {
   const handleDrop = (e) => {
     e.preventDefault();
     const rect = e.target.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
+    // Normalize drop position by zoom
+    const x = (e.clientX - rect.left) / zoom;
+    const y = (e.clientY - rect.top) / zoom;
+  
     const movingIndex = e.dataTransfer.getData('movingIndex');
     if (movingIndex !== '') {
       setPlacedOperators((prev) => {
@@ -717,6 +740,16 @@ const App = () => {
           <ZoomButton label="Zoom Out" icon="fas fa-search-minus" onClick={() => setZoom(prev => Math.max(prev - 0.1, 0.5))} />
           <ZoomButton label="Reset" icon="fas fa-compress" onClick={() => setZoom(1)} />
         </div>
+      </div>
+      <div
+        className={`flex items-center justify-center w-16 h-16 rounded-full transition-colors
+          ${draggedOpIndex !== null || draggingOperator ? 'bg-red-600' : 'bg-gray-400'}`}
+        style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}
+        id="operator-bin"
+      >
+        <svg width="32" height="32" fill="white" viewBox="0 0 24 24">
+          <path d="M9 3v1H4v2h16V4h-5V3H9zm-4 5v13c0 1.1.9 2 2 2h6c1.1 0 2-.9 2-2V8H5zm2 2h6v11H7V10z"/>
+        </svg>
       </div>  
     </>
   );
@@ -853,7 +886,7 @@ const App = () => {
                     value={toolLayout}
                     onChange={(e) => {
                       setToolLayout(e.target.value);
-                      setShowSettings(false); // Close the settings after selection
+                      setShowSettings(false);
                     }}
                   >
                     <option value="horizontal">Horizontal</option>
@@ -870,37 +903,58 @@ const App = () => {
       <Routes>
             <Route path="/" element={<React.Fragment>
               {/* Map Sidebar */}
-              <div className={`bg-gray-800 text-white w-full sm:w-64 p-4 overflow-y-auto ${
-                isSidebarOpen ? 'absolute z-50 sm:relative' : 'hidden'}`}>
+              {isSidebarOpen && (
+                <div className="bg-gray-800 text-white w-70 flex-shrink-0 h-full z-40 sm:static overflow-y-auto">
+                  <button
+                    className="sm:hidden absolute right-4 top-4 text-white"
+                    onClick={() => setIsSidebarOpen(false)}
+                  >
+                    <i className="fas fa-times text-xl"></i>
+                  </button>
+                  <div className={`bg-gray-800 text-white w-full sm:w-64 p-4 ${
+                    isSidebarOpen ? 'absolute z-50 sm:relative' : 'hidden'}`}>
 
-                {/* Mobile Menu Close Button */}
-                <button className="sm:hidden absolute right-4 top-4 text-white" onClick={() => setIsSidebarOpen(false)}>
-                  <i className="fas fa-times text-xl"></i>
-                </button>
-                
-                {/* Maps Title */}
-                <div className="text-2xl font-semibold text-center">Maps</div>
-
-                {/* List of Maps */}
-                <div className="space-y-2 mt-4">
-                  {mapsData.map((map) => (
-                    <button
-                      key={map.id}
-                      className="bg-gray-500 text-white py-2 px-4 rounded w-full text-left hover:bg-gray-400"
-                      onClick={() => handleMapSelect(map)}
-                    >
-                      {map.thumbnail && (
-                        <img 
-                          src={map.thumbnail} 
-                          alt={`$map.name} thumbnail`} 
-                          className="w-full h-full object-contain rounded mb-2"
-                        />
-                      )}
-                      <span>{map.name}</span>
+                    {/* Mobile Menu Close Button */}
+                    <button className="sm:hidden absolute right-4 top-4 text-white" onClick={() => setIsSidebarOpen(false)}>
+                      <i className="fas fa-times text-xl"></i>
                     </button>
-                  ))}
+                    
+                    {/* Maps Title */}
+                    <div className="text-2xl font-semibold text-center">Maps</div>
+
+                    {/* List of Maps */}
+                    <div className="space-y-2 mt-4">
+                      {mapsData.map((map) => (
+                        <button
+                          key={map.id}
+                          className="bg-gray-500 text-white py-2 px-4 rounded w-full text-left hover:bg-gray-400"
+                          onClick={() => handleMapSelect(map)}
+                        >
+                          {map.thumbnail && (
+                            <img 
+                              src={map.thumbnail} 
+                              alt={`$map.name} thumbnail`} 
+                              className="w-full h-full object-contain rounded mb-2"
+                            />
+                          )}
+                          <span>{map.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
+              {!isSidebarOpen && (
+                <button
+                  className="fixed left-0 top-1/2 z-50 bg-blue-600 text-white px-3 py-2 rounded-r shadow"
+                  onClick={() => setIsSidebarOpen(true)}
+                  style={{ transform: 'translateY(-50%)' }}
+                >
+                  <span className="hidden sm:inline">Map</span>
+                  <span className="sm:hidden">M</span>
+                </button>
+              )}
+          
 
               {/* Main Content Area */}
               <div className="flex-1 bg-white p-4 flex flex-col overflow-hidden">
@@ -997,17 +1051,79 @@ const App = () => {
                                     src={op.image}
                                     alt={op.name}
                                     title={op.name}
-                                    className="absolute w-10 h-10 rounded-full border-2 border-white cursor-move z-20"
+                                    className={`absolute w-10 h-10 rounded-full border-2 border-white cursor-move z-20 ${draggedOpIndex === index ? 'ring-4 ring-blue-400' : ''}`}
                                     style={{
                                       top: `${op.y}px`,
                                       left: `${op.x}px`,
                                       transform: `scale(${1 / zoom})`,
+                                      touchAction: 'none', // Prevents default scrolling while dragging
                                     }}
-                                    draggable
-                                    onDragStart={(e) => e.dataTransfer.setData('movingIndex', index)}
+                                    draggable                               
                                     onContextMenu={(e) => {
                                       e.preventDefault();
                                       setPlacedOperators((prev) => prev.filter((_, i) => i !== index));
+                                    }}
+                                    // --- Touch support ---
+                                    onDragStart={e => {
+                                      setDraggedOpIndex(index);
+                                      setDragOffset({
+                                        x: e.nativeEvent.offsetX * zoom,
+                                        y: e.nativeEvent.offsetY * zoom,
+                                      });
+                                    }}
+                                    onDragEnd={e => {
+                                      setDraggedOpIndex(null);
+                                      const bin = document.getElementById('operator-bin');
+                                      if (bin) {
+                                        const binRect = bin.getBoundingClientRect();
+                                        if (
+                                          e.clientX >= binRect.left &&
+                                          e.clientX <= binRect.right &&
+                                          e.clientY >= binRect.top &&
+                                          e.clientY <= binRect.bottom
+                                        ) {
+                                          setPlacedOperators(prev => prev.filter((_, i) => i !== index));
+                                        }
+                                      }
+                                    }}
+                                    onTouchStart={e => {
+                                      setDraggedOpIndex(index);
+                                      const touch = e.touches[0];
+                                      setDragOffset({
+                                        x: touch.clientX - op.x * zoom,
+                                        y: touch.clientY - op.y * zoom,
+                                      });
+                                    }}
+                                    onTouchMove={e => {
+                                      if (draggedOpIndex === index) {
+                                        e.preventDefault();
+                                        const touch = e.touches[0];
+                                        setPlacedOperators(prev => {
+                                          const updated = [...prev];
+                                          updated[index] = {
+                                            ...updated[index],
+                                            x: (touch.clientX - dragOffset.x) / zoom,
+                                            y: (touch.clientY - dragOffset.y) / zoom,
+                                          };
+                                          return updated;
+                                        });
+                                      }
+                                    }}
+                                    onTouchEnd={e => {
+                                      setDraggedOpIndex(null);
+                                      const bin = document.getElementById('operator-bin');
+                                      if (bin && e.changedTouches && e.changedTouches.length > 0) {
+                                        const touch = e.changedTouches[0];
+                                        const binRect = bin.getBoundingClientRect();
+                                        if (
+                                          touch.clientX >= binRect.left &&
+                                          touch.clientX <= binRect.right &&
+                                          touch.clientY >= binRect.top &&
+                                          touch.clientY <= binRect.bottom
+                                        ) {
+                                          setPlacedOperators(prev => prev.filter((_, i) => i !== index));
+                                        }
+                                      }
                                     }}
                                   />
                                 ))}
@@ -1020,8 +1136,35 @@ const App = () => {
                                     width: `${mapSize.width}px`,
                                     height: `${mapSize.height}px`,
                                   }}
-                                  onDrop={handleDrop}
-                                  onDragOver={(e) => e.preventDefault()}
+                                  onClick={e => {
+                                    if (selectedOperatorToPlace) {
+                                      const rect = e.target.getBoundingClientRect();
+                                      const x = (e.clientX - rect.left) / zoom;
+                                      const y = (e.clientY - rect.top) / zoom;
+                                      setPlacedOperators(prev => [...prev, { ...selectedOperatorToPlace, x, y }]);
+                                      setSelectedOperatorToPlace(null);
+                                    }
+                                  }}
+                                  onDrop={e => {
+                                    if (draggingOperator) {
+                                      const rect = e.target.getBoundingClientRect();
+                                      const x = (e.clientX - rect.left) / zoom;
+                                      const y = (e.clientY - rect.top) / zoom;
+                                      setPlacedOperators(prev => [...prev, { ...draggingOperator, x, y }]);
+                                      setDraggingOperator(null);
+                                    }
+                                  }}
+                                  onDragOver={e => e.preventDefault()}
+                                  onTouchEnd={e => {
+                                    if (selectedOperatorToPlace) {
+                                      const touch = e.changedTouches[0];
+                                      const rect = e.target.getBoundingClientRect();
+                                      const x = (touch.clientX - rect.left) / zoom;
+                                      const y = (touch.clientY - rect.top) / zoom;
+                                      setPlacedOperators(prev => [...prev, { ...selectedOperatorToPlace, x, y }]);
+                                      setSelectedOperatorToPlace(null);
+                                    }
+                                  }}
                                 />
                               </div>
                             ) : (
@@ -1045,15 +1188,41 @@ const App = () => {
               
               
               {/* Operator Sidebar */}
-              <div className="bg-gray-800 text-white w-full sm:w-64 p-4 overflow-y-auto">
+              {isOperatorSidebarOpen && (
+                <div className="bg-gray-800 text-white w-70 flex-shrink-0 h-full z-40 sm:static">
+                <button
+                  className="sm:hidden absolute left-4 top-4 text-white"
+                  onClick={() => setIsOperatorSidebarOpen(false)}
+                >
+                  <i className="fas fa-times text-xl"></i>
+                </button>
+                <div className="bg-gray-800 text-white w-full sm:w-64 p-4 h-full">
                 <OperatorSidebar
                   operators={OperatorData}
-                  onOperatorSelect={setSelectedOperator}
                   onClearOperators={() => setPlacedOperators([])}
+                  zoom={zoom}
+                  setPlacedOperators={setPlacedOperators}
+                  setDraggingOperator={setDraggingOperator}
+                  setDraggingTouch={setDraggingTouch}
+                  selectedOperatorToPlace={selectedOperatorToPlace}
+                  setSelectedOperatorToPlace={setSelectedOperatorToPlace}
                 />
+                </div>
               </div>
+              )}
+              {/* Show open button when sidebar is closed */}
+              {!isOperatorSidebarOpen && (
+                <button
+                  className="fixed right-0 top-1/2 z-50 bg-blue-600 text-white px-3 py-2 rounded-l shadow"
+                  onClick={() => setIsOperatorSidebarOpen(true)}
+                  style={{ transform: 'translateY(-50%)' }}
+                >
+                  <span className="hidden sm:inline">Operators</span>
+                  <span className="sm:hidden">O</span>
+                </button>
+              )}
               </React.Fragment>} />
-          <Route path="/site-setups" element={<ForumPage />} />
+          <Route path="/site-setups" element={<ForumPage handleLoadSetup={handleLoadSetup} />} />
           <Route path="/UserAccount" element={<UserAccountPage handleLoadSetup={handleLoadSetup}/>} />
           <Route path="/auth" element={<AuthPage />} />
         </Routes>
