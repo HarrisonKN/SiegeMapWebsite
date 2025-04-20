@@ -32,7 +32,7 @@ const App = () => {
   const [floorAnnotations, setFloorAnnotations] = useState({});
   const [showModal, setShowModal] = useState(false);
   const [draggedOpIndex, setDraggedOpIndex] = useState(null);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const dragOffsetRef = useRef({ x: 0, y: 0 });
   const [draggingOperator, setDraggingOperator] = useState(null);
   const [draggingTouch, setDraggingTouch] = useState(null); 
   const [selectedOperatorToPlace, setSelectedOperatorToPlace] = useState(null);
@@ -321,6 +321,14 @@ const App = () => {
       ...prev,
       [floorKey]: []
     }));
+  };
+
+
+  const handleOperatorSelect = (operator) => {
+    setSelectedOperatorToPlace(operator);
+    if (window.innerWidth < 640) {
+      setIsOperatorSidebarOpen(false);
+    }
   };
 
 
@@ -835,12 +843,12 @@ const App = () => {
 
   const ZoomButton = ({ label, icon, onClick }) => (
     <div
-      className="p-1 sm:p-2 rounded text-center cursor-pointer hover:bg-gray-400 bg-gray-200 min-w-[36px] sm:min-w-[48px]"
-      style={{ fontSize: '0.85rem' }}
+      className="p-1 sm:p-2 rounded text-center cursor-pointer hover:bg-gray-400 bg-gray-200 min-w-[28px] sm:min-w-[48px]"
+      style={{ fontSize: '0.75rem' }}
       onClick={onClick}
     >
-      <i className={`${icon} text-base sm:text-lg`}></i>
-      <p className="font-semibold text-[10px] sm:text-xs mt-0.5">{label}</p>
+      <i className={`${icon} text-xs sm:text-lg`}></i>
+      <p className="font-semibold text-[9px] sm:text-xs mt-0.5">{label}</p>
     </div>
   );
 
@@ -893,24 +901,24 @@ const App = () => {
   };
 
   const ToolButton = ({ label, icon, current, setCurrent, customOnClick = null, tooltip }) => (
-  <Tooltip text={tooltip}>
-    <div
-      className={`p-2 sm:p-4 rounded-lg text-center cursor-pointer hover:bg-gray-400 
-        ${current === label.toLowerCase() ? 'bg-blue-500' : 'bg-gray-300'}
-        min-w-[60px] sm:min-w-[80px]`}
-      onClick={() => {
-        if (customOnClick) {
-          customOnClick();
-        } else {
-          setCurrent(label.toLowerCase());
-        }
-      }}
-    >
-      <i className={`${icon} text-xl sm:text-2xl`}></i>
-      <p className="font-semibold text-xs sm:text-sm mt-1">{label}</p>
-    </div>
-  </Tooltip>
-);
+    <Tooltip text={tooltip}>
+      <div
+        className={`p-1 sm:p-4 rounded-lg text-center cursor-pointer hover:bg-gray-400 
+          ${current === label.toLowerCase() ? 'bg-blue-500' : 'bg-gray-300'}
+          min-w-[40px] sm:min-w-[80px]`}
+        onClick={() => {
+          if (customOnClick) {
+            customOnClick();
+          } else {
+            setCurrent(label.toLowerCase());
+          }
+        }}
+      >
+        <i className={`${icon} text-base sm:text-2xl`}></i>
+        <p className="font-semibold text-[10px] sm:text-sm mt-0.5">{label}</p>
+      </div>
+    </Tooltip>
+  );
 
   return (
     <div className="flex flex-col h-screen">
@@ -1037,20 +1045,20 @@ const App = () => {
 
               {/* Main Content Area */}
               <div className="flex-1 bg-white p-4 flex flex-col overflow-hidden">
-                <h1 className="text-3xl font-bold text-gray-800">Welcome to R6 Siege Map Annotations</h1>
-                <p className="text-lg text-gray-600">Select a map, choose a floor, and start annotating!</p>
+                <h1 className="text-xl sm:text-3xl font-bold text-gray-800">Welcome to R6 Siege Map Annotations</h1>
+                <p className="text-base sm:text-lg text-gray-600">Select a map, choose a floor, and start annotating!</p>
 
                 <div className={`flex ${toolLayout === 'vertical' ? 'flex-row' : 'flex-col'} gap-6 flex-1 overflow-hidden`}>
                 
                   {/* Floor buttons for mobile */}
                   {selectedMap && (
-                    <div className="sm:hidden w-full flex justify-center gap-2 bg-white/90 p-2 rounded shadow mb-2 z-30">
+                    <div className="sm:hidden w-full flex justify-center gap-1 bg-white/90 p-1 rounded shadow mb-2 z-30">
                       {selectedMap.floors.map((floor) => (
                         <button
                           key={floor.name}
-                          className={`px-3 py-1 rounded font-semibold ${
-                            selectedFloor?.name === floor.name ? 'bg-blue-500 text-white' : 'bg-white text-gray-700'
-                          }`}
+                          className={`px-2 py-1 rounded font-semibold text-xs
+                            ${selectedFloor?.name === floor.name ? 'bg-blue-500 text-white' : 'bg-white text-gray-700'}
+                            border border-gray-300`}
                           onClick={() => handleFloorSelect(floor)}
                         >
                           {floor.name}
@@ -1151,8 +1159,7 @@ const App = () => {
                                       left: `${op.x}px`,
                                       transform: `scale(${1 / zoom})`,
                                       touchAction: 'none', // Prevents default scrolling while dragging
-                                    }}
-                                    draggable                               
+                                    }}                              
                                     onContextMenu={(e) => {
                                       e.preventDefault();
                                       setPlacedOperators((prev) => prev.filter((_, i) => i !== index));
@@ -1160,10 +1167,10 @@ const App = () => {
                                     // --- Touch support ---
                                     onDragStart={e => {
                                       setDraggedOpIndex(index);
-                                      setDragOffset({
-                                        x: e.nativeEvent.offsetX * zoom,
-                                        y: e.nativeEvent.offsetY * zoom,
-                                      });
+                                      dragOffsetRef.current = {
+                                        x: e.clientX - op.x * zoom,
+                                        y: e.clientY - op.y * zoom,
+                                      };
                                     }}
                                     onDragEnd={e => {
                                       setDraggedOpIndex(null);
@@ -1183,10 +1190,10 @@ const App = () => {
                                     onTouchStart={e => {
                                       setDraggedOpIndex(index);
                                       const touch = e.touches[0];
-                                      setDragOffset({
+                                      dragOffsetRef.current = {
                                         x: touch.clientX - op.x * zoom,
                                         y: touch.clientY - op.y * zoom,
-                                      });
+                                      };
                                     }}
                                     onTouchMove={e => {
                                       if (draggedOpIndex === index) {
@@ -1196,8 +1203,8 @@ const App = () => {
                                           const updated = [...prev];
                                           updated[index] = {
                                             ...updated[index],
-                                            x: (touch.clientX - dragOffset.x) / zoom,
-                                            y: (touch.clientY - dragOffset.y) / zoom,
+                                            x: (touch.clientX - dragOffsetRef.current.x) / zoom,
+                                            y: (touch.clientY - dragOffsetRef.current.y) / zoom,
                                           };
                                           return updated;
                                         });
@@ -1218,6 +1225,50 @@ const App = () => {
                                           setPlacedOperators(prev => prev.filter((_, i) => i !== index));
                                         }
                                       }
+                                    }}
+
+                                    onMouseDown={e => {
+                                      e.preventDefault();
+                                      setDraggedOpIndex(index);
+                                      dragOffsetRef.current = {
+                                        x: e.clientX - op.x * zoom,
+                                        y: e.clientY - op.y * zoom,
+                                      };
+                                    
+                                      const handleMouseMove = (moveEvent) => {
+                                        setPlacedOperators(prev => {
+                                          const updated = [...prev];
+                                          updated[index] = {
+                                            ...updated[index],
+                                            x: (moveEvent.clientX - dragOffsetRef.current.x) / zoom,
+                                            y: (moveEvent.clientY - dragOffsetRef.current.y) / zoom,
+                                          };
+                                          return updated;
+                                        });
+                                      };
+                                    
+                                      const handleMouseUp = (upEvent) => {
+                                        setDraggedOpIndex(null);
+                                        document.removeEventListener('mousemove', handleMouseMove);
+                                        document.removeEventListener('mouseup', handleMouseUp);
+                                    
+                                        // Remove operator if dropped over bin
+                                        const bin = document.getElementById('operator-bin');
+                                        if (bin) {
+                                          const binRect = bin.getBoundingClientRect();
+                                          if (
+                                            upEvent.clientX >= binRect.left &&
+                                            upEvent.clientX <= binRect.right &&
+                                            upEvent.clientY >= binRect.top &&
+                                            upEvent.clientY <= binRect.bottom
+                                          ) {
+                                            setPlacedOperators(prev => prev.filter((_, i) => i !== index));
+                                          }
+                                        }
+                                      };
+                                    
+                                      document.addEventListener('mousemove', handleMouseMove);
+                                      document.addEventListener('mouseup', handleMouseUp);
                                     }}
                                   />
                                 ))}
@@ -1300,7 +1351,7 @@ const App = () => {
                     setDraggingOperator={setDraggingOperator}
                     setDraggingTouch={setDraggingTouch}
                     selectedOperatorToPlace={selectedOperatorToPlace}
-                    setSelectedOperatorToPlace={setSelectedOperatorToPlace}
+                    setSelectedOperatorToPlace={handleOperatorSelect}
                   />
                   </div>
                 </div>
