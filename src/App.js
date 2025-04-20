@@ -1159,6 +1159,10 @@ const App = () => {
                                   src={selectedFloor?.image || selectedMap.thumbnail}
                                   alt={`${selectedMap.name} - ${selectedFloor?.name || 'Overview'}`}
                                   className="absolute inset-0 w-full h-full object-contain pointer-events-none"
+                                  style={{
+                                    width: `${mapSize.width}px`,
+                                    height: `${mapSize.height}px`,
+                                  }}
                                 />
 
                                 {/* Placed Operators */}
