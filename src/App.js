@@ -270,6 +270,13 @@ const App = () => {
     if (window.innerWidth < 640) {
       setIsSidebarOpen(false);
     }
+    // Reset scroll position after map select
+    setTimeout(() => {
+      if (scrollRef.current) {
+        scrollRef.current.scrollLeft = 0;
+        scrollRef.current.scrollTop = 0;
+      }
+    }, 0);
   };
 
   // Handle operator placement onto the screen
@@ -839,6 +846,13 @@ const App = () => {
 
   const handleFloorSelect = (floor) => {
     setSelectedFloor(floor);
+    // Reset scroll position after floor select
+    setTimeout(() => {
+      if (scrollRef.current) {
+        scrollRef.current.scrollLeft = 0;
+        scrollRef.current.scrollTop = 0;
+      }
+    }, 0);
   };
 
   const ZoomButton = ({ label, icon, onClick }) => (
