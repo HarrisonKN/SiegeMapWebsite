@@ -20,11 +20,12 @@ import { Routes, Route, Link, useLocation } from 'react-router-dom';
 const App = () => {
   const [selectedMap, setSelectedMap] = useState(null);
   const [selectedFloor, setSelectedFloor] = useState(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [isOperatorSidebarOpen, setIsOperatorSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => window.innerWidth >= 640);
+  const [isOperatorSidebarOpen, setIsOperatorSidebarOpen] = useState(() => window.innerWidth >= 640);
   const [currentTool, setCurrentTool] = useState(null);
   const [toolLayout, setToolLayout] = useState('horizontal');
   const [showSettings, setShowSettings] = useState(false);
+  const settingsRef = useRef(null);
   const [setSelectedOperator] = useState(null);
   const [placedOperators, setPlacedOperators] = useState([]);
   const [mapSize, setMapSize] = useState({ width: 0, height: 0 });
@@ -266,6 +267,9 @@ const App = () => {
   const handleMapSelect = (map) => {
     setSelectedMap(map);
     setSelectedFloor(null);
+    if (window.innerWidth < 640) {
+      setIsSidebarOpen(false);
+    }
   };
 
   // Handle operator placement onto the screen
@@ -334,6 +338,77 @@ const App = () => {
 
     lastZoomCenter.current = null;
   }, [zoom]);
+
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+  
+    let isTouching = false;
+    let lastTouch = { x: 0, y: 0 };
+  
+    const onTouchStart = (e) => {
+      if (e.touches.length === 1) {
+        isTouching = true;
+        lastTouch = {
+          x: e.touches[0].clientX,
+          y: e.touches[0].clientY,
+        };
+      }
+    };
+  
+    const onTouchMove = (e) => {
+      if (!isTouching || e.touches.length !== 1) return;
+      e.preventDefault();
+      const touch = e.touches[0];
+      const dx = lastTouch.x - touch.clientX;
+      const dy = lastTouch.y - touch.clientY;
+      container.scrollLeft += dx;
+      container.scrollTop += dy;
+      lastTouch = {
+        x: touch.clientX,
+        y: touch.clientY,
+      };
+    };
+  
+    const onTouchEnd = () => {
+      isTouching = false;
+    };
+  
+    container.addEventListener('touchstart', onTouchStart, { passive: false });
+    container.addEventListener('touchmove', onTouchMove, { passive: false });
+    container.addEventListener('touchend', onTouchEnd);
+  
+    return () => {
+      container.removeEventListener('touchstart', onTouchStart);
+      container.removeEventListener('touchmove', onTouchMove);
+      container.removeEventListener('touchend', onTouchEnd);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 640) {
+        setIsSidebarOpen(true);
+        setIsOperatorSidebarOpen(true);
+      } else {
+        setIsSidebarOpen(false);
+        setIsOperatorSidebarOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  
+  useEffect(() => {
+    if (!showSettings) return;
+    const handleClick = (e) => {
+      if (settingsRef.current && !settingsRef.current.contains(e.target)) {
+        setShowSettings(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [showSettings]);
   
   // Handle scrolling to center the map // dont know if this is needed
   useEffect(() => {
@@ -841,61 +916,71 @@ const App = () => {
     <div className="flex flex-col h-screen">
 
       {/* Header */}
-      <div className="bg-gray-800 text-white p-4 flex justify-between items-center">
-        <div className="text-lg font-semibold">R6 Siege Map Annotations</div>
-        <div className="flex space-x-4">
-          <Link to="/" className="bg-gray-600 px-2 sm:px-4 py-1 sm:py-2 rounded text-sm sm:text-base hover:bg-gray-500 active:bg-gray-700 transition duration-150"
+      <div className="bg-gray-800 text-white p-4 flex flex-col sm:flex-row justify-between items-center">
+        <div className="text-lg font-semibold text-center sm:text-left w-full sm:w-auto">
+          R6 Siege Map Annotations
+        </div>
+        <div className="flex flex-row flex-wrap gap-2 w-full sm:w-auto mt-2 sm:mt-0 justify-center items-center">
+          <Link
+            to="/"
+            className="flex items-center justify-center min-w-[120px] text-center bg-gray-600 px-2 sm:px-4 py-2 rounded text-sm sm:text-base hover:bg-gray-500 active:bg-gray-700 transition duration-150"
             onClick={() => {
               setSelectedMap(null);
               setSelectedFloor(null);
               setFloorAnnotations({});
               setPlacedOperators([]);
             }}
-          >Home</Link>
-          <Link to="/site-setups" className="bg-gray-600 px-2 sm:px-4 py-1 sm:py-2 rounded text-sm sm:text-base hover:bg-gray-500 active:bg-gray-700 transition duration-150">Site Setups</Link>
-        
-        </div>
-
-          {/*Top Right Menu Buttons*/}
-          <div className="flex space-x-2 sm:space-x-4">
+          >
+            Home
+          </Link>
+          <Link
+            to="/site-setups"
+            className="flex items-center justify-center min-w-[120px] text-center bg-gray-600 px-2 sm:px-4 py-2 rounded text-sm sm:text-base hover:bg-gray-500 active:bg-gray-700 transition duration-150"
+          >
+            Site Setups
+          </Link>
           {user ? (
             <Link
               to="/UserAccount"
-              className="bg-gray-600 px-2 sm:px-4 py-1 sm:py-2 rounded text-sm sm:text-base hover:bg-gray-500 active:bg-gray-700 transition duration-150"
+              className="flex items-center justify-center min-w-[120px] text-center bg-gray-600 px-2 sm:px-4 py-2 rounded text-sm sm:text-base hover:bg-gray-500 active:bg-gray-700 transition duration-150"
             >
               Account
             </Link>
           ) : (
             <Link
               to="/auth"
-              className="bg-gray-600 px-2 sm:px-4 py-1 sm:py-2 rounded text-sm sm:text-base hover:bg-gray-500 active:bg-gray-700 transition duration-150"
+              className="flex items-center justify-center min-w-[120px] text-center bg-gray-600 px-2 sm:px-4 py-2 rounded text-sm sm:text-base hover:bg-gray-500 active:bg-gray-700 transition duration-150"
             >
               Login/Register
             </Link>
           )}
-            <div className="relative">
-              <button
-                className="bg-gray-600 px-2 sm:px-4 py-1 sm:py-2 rounded text-sm sm:text-base hover:bg-gray-500 active:bg-gray-700 transition duration-150"
-                onClick={() => setShowSettings(!showSettings)}>Settings</button>
-
-              {showSettings && (
-                <div className="absolute right-0 mt-2 bg-white text-black shadow-lg rounded p-4 z-10 w-48">
-                  <label className="block mb-2 font-semibold">Tool Layout</label>
-                  <select
-                    className="w-full p-2 border rounded"
-                    value={toolLayout}
-                    onChange={(e) => {
-                      setToolLayout(e.target.value);
-                      setShowSettings(false);
-                    }}
-                  >
-                    <option value="horizontal">Horizontal</option>
-                    <option value="vertical">Vertical</option>
-                  </select>
-                </div>
-              )}
-            </div>
+          <div className="relative flex items-center justify-center min-w-[120px]">
+            <button
+              className="w-full bg-gray-600 px-2 sm:px-4 py-2 rounded text-sm sm:text-base hover:bg-gray-500 active:bg-gray-700 transition duration-150 text-center"
+              onClick={() => setShowSettings(!showSettings)}
+            >
+              Settings
+            </button>
+            {showSettings && (
+              <div 
+                ref={settingsRef}
+                className="absolute right-0 mt-2 bg-white text-black shadow-lg rounded p-4 z-10 w-48">
+                <label className="block mb-2 font-semibold">Tool Layout</label>
+                <select
+                  className="w-full p-2 border rounded"
+                  value={toolLayout}
+                  onChange={(e) => {
+                    setToolLayout(e.target.value);
+                    setShowSettings(false);
+                  }}
+                >
+                  <option value="horizontal">Horizontal</option>
+                  <option value="vertical">Vertical</option>
+                </select>
+              </div>
+            )}
           </div>
+        </div>
       </div>
 
       {/* Main Body Layout */}
@@ -905,12 +990,6 @@ const App = () => {
               {/* Map Sidebar */}
               {isSidebarOpen && (
                 <div className="bg-gray-800 text-white w-70 flex-shrink-0 h-full z-40 sm:static overflow-y-auto">
-                  <button
-                    className="sm:hidden absolute right-4 top-4 text-white"
-                    onClick={() => setIsSidebarOpen(false)}
-                  >
-                    <i className="fas fa-times text-xl"></i>
-                  </button>
                   <div className={`bg-gray-800 text-white w-full sm:w-64 p-4 ${
                     isSidebarOpen ? 'absolute z-50 sm:relative' : 'hidden'}`}>
 
@@ -963,6 +1042,22 @@ const App = () => {
 
                 <div className={`flex ${toolLayout === 'vertical' ? 'flex-row' : 'flex-col'} gap-6 flex-1 overflow-hidden`}>
                 
+                  {/* Floor buttons for mobile */}
+                  {selectedMap && (
+                    <div className="sm:hidden w-full flex justify-center gap-2 bg-white/90 p-2 rounded shadow mb-2 z-30">
+                      {selectedMap.floors.map((floor) => (
+                        <button
+                          key={floor.name}
+                          className={`px-3 py-1 rounded font-semibold ${
+                            selectedFloor?.name === floor.name ? 'bg-blue-500 text-white' : 'bg-white text-gray-700'
+                          }`}
+                          onClick={() => handleFloorSelect(floor)}
+                        >
+                          {floor.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                   
                   {/* Map Viewer */}
                   <div className="relative bg-gray-200 flex-1 flex justify-center items-center rounded overflow-hidden">
@@ -1006,21 +1101,20 @@ const App = () => {
                           redrawCanvas();
                         }}>
 
-                        {/* Floor selection buttons */}
+                        {/* Floor selection buttons for Desktop */}
                         {selectedMap && (
-                                    <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-30 flex gap-2 bg-white/80 p-2 rounded shadow">
-                                        {selectedMap.floors.map((floor) => (
-                                          <button
-                                            key={floor.name}
-                                            className={`px-3 py-1 rounded font-semibold ${
-                                              selectedFloor?.name === floor.name ? 'bg-blue-500 text-white' : 'bg-white text-gray-700'}`}
-                                            onClick={() => handleFloorSelect(floor)}>
-                                            {floor.name}
-                                          </button>
-                                        ))}
-                                      </div>
-                                  )}
-
+                          <div className="hidden sm:flex absolute top-4 left-1/2 transform -translate-x-1/2 z-30 flex gap-2 bg-white/80 p-2 rounded shadow">
+                            {selectedMap.floors.map((floor) => (
+                              <button
+                                key={floor.name}
+                                className={`px-3 py-1 rounded font-semibold ${
+                                  selectedFloor?.name === floor.name ? 'bg-blue-500 text-white' : 'bg-white text-gray-700'}`}
+                                onClick={() => handleFloorSelect(floor)}>
+                                {floor.name}
+                              </button>
+                            ))}
+                          </div>
+                        )}
 
                         <div className="relative flex-1 h-full flex justify-center items-center">
                           { /*Scrollable Area*/}
@@ -1188,28 +1282,30 @@ const App = () => {
               
               
               {/* Operator Sidebar */}
-              {isOperatorSidebarOpen && (
-                <div className="bg-gray-800 text-white w-70 flex-shrink-0 h-full z-40 sm:static">
-                <button
-                  className="sm:hidden absolute left-4 top-4 text-white"
-                  onClick={() => setIsOperatorSidebarOpen(false)}
-                >
-                  <i className="fas fa-times text-xl"></i>
-                </button>
-                <div className="bg-gray-800 text-white w-full sm:w-64 p-4 h-full">
-                <OperatorSidebar
-                  operators={OperatorData}
-                  onClearOperators={() => setPlacedOperators([])}
-                  zoom={zoom}
-                  setPlacedOperators={setPlacedOperators}
-                  setDraggingOperator={setDraggingOperator}
-                  setDraggingTouch={setDraggingTouch}
-                  selectedOperatorToPlace={selectedOperatorToPlace}
-                  setSelectedOperatorToPlace={setSelectedOperatorToPlace}
-                />
+              <div className={`bg-gray-800 text-white ${isOperatorSidebarOpen ? 'fixed inset-0 z-50' : 'sm:w-64'} sm:static h-full`}>
+                {isOperatorSidebarOpen && (
+                  <div className="relative bg-gray-800 text-white w-full sm:w-64 p-4 h-full">
+                  <button
+                    className="absolute top-2 right-2 text-white z-50"
+                    onClick={() => setIsOperatorSidebarOpen(false)}
+                  >
+                    <i className="fas fa-times text-xl"></i>
+                  </button>
+                  <div className="bg-gray-800 text-white w-full sm:w-64 p-4 h-full">
+                  <OperatorSidebar
+                    operators={OperatorData}
+                    onClearOperators={() => setPlacedOperators([])}
+                    zoom={zoom}
+                    setPlacedOperators={setPlacedOperators}
+                    setDraggingOperator={setDraggingOperator}
+                    setDraggingTouch={setDraggingTouch}
+                    selectedOperatorToPlace={selectedOperatorToPlace}
+                    setSelectedOperatorToPlace={setSelectedOperatorToPlace}
+                  />
+                  </div>
                 </div>
+                )}
               </div>
-              )}
               {/* Show open button when sidebar is closed */}
               {!isOperatorSidebarOpen && (
                 <button
