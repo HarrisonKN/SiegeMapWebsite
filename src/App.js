@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { AppProvider, useAppContext } from './context/AppContext';
 import OperatorSidebar from './components/OperatorSidebar';
@@ -664,7 +665,7 @@ const App = () => {
     const currentAnnotations = floorAnnotations[floorKey] || [];
     drawAnnotations(ctx, currentAnnotations);
   }, [floorAnnotations, zoom, selectedFloor, selectedMap]);
-
+  
   const renderToolButtons = () => (
     <>
       <ToolButton
@@ -673,18 +674,20 @@ const App = () => {
         current={currentTool}
         setCurrent={setCurrentTool}
         customOnClick={() => setCurrentTool(null)} // Deselect any active tool
+        tooltip="Select and move items (default tool)"
       />
-      <ToolButton label="Pen" icon="fas fa-pencil-alt" current={currentTool} setCurrent={setCurrentTool} />
-      <ToolButton label="Line" icon="fas fa-random" current={currentTool} setCurrent={setCurrentTool} />
-      <ToolButton label="Shape" icon="fas fa-square" current={currentTool} setCurrent={setCurrentTool} />
-      <ToolButton label="Text" icon="fas fa-font" current={currentTool} setCurrent={setCurrentTool} />
-      <ToolButton label="Eraser" icon="fas fa-eraser" current={currentTool} setCurrent={setCurrentTool} />
+      <ToolButton label="Pen" icon="fas fa-pencil-alt" current={currentTool} setCurrent={setCurrentTool} tooltip="Freehand draw lines on the Map" />
+      <ToolButton label="Line" icon="fas fa-random" current={currentTool} setCurrent={setCurrentTool} tooltip="Draw Straight lines on the map" />
+      <ToolButton label="Shape" icon="fas fa-square" current={currentTool} setCurrent={setCurrentTool} tooltip="Draw Reinforcement walls on the map" />
+      <ToolButton label="Text" icon="fas fa-font" current={currentTool} setCurrent={setCurrentTool} tooltip="Add text onto the map"/>
+      <ToolButton label="Eraser" icon="fas fa-eraser" current={currentTool} setCurrent={setCurrentTool} tooltip="Erase whole annotations by hovering over them" />
       <ToolButton
         label="Clear"
         icon="fas fa-trash-alt"
         current={currentTool}
         setCurrent={setCurrentTool}
         customOnClick={clearCurrentFloorAnnotations}
+        tooltip="Clear all annotations on the current floor"
       />
       <button
         className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow"
@@ -733,7 +736,56 @@ const App = () => {
     </div>
   );
 
-  const ToolButton = ({ label, icon, current, setCurrent, customOnClick = null }) => (
+
+  const Tooltip = ({ text, children }) => {
+    const [show, setShow] = useState(false);
+    const [coords, setCoords] = useState({ x: 0, y: 0 });
+    const ref = useRef();
+
+    const handleMouseEnter = (e) => {
+      const rect = ref.current.getBoundingClientRect();
+      setCoords({
+        x: rect.left + rect.width / 2,
+        y: rect.top,
+      });
+      setShow(true);
+    };
+
+    const handleMouseLeave = () => setShow(false);
+
+    return (
+      <>
+        <div
+          ref={ref}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+          className="inline-block"
+        >
+          {children}
+        </div>
+        {show &&
+          createPortal(
+            <div
+              style={{
+                position: 'fixed',
+                left: coords.x,
+                top: coords.y - 10,
+                transform: 'translate(-50%, -100%)',
+                zIndex: 9999,
+                pointerEvents: 'none',
+              }}
+              className="px-2 py-1 bg-black text-white text-xs rounded shadow-lg whitespace-pre-line"
+            >
+              {text}
+            </div>,
+            document.body
+          )}
+      </>
+    );
+  };
+
+  const ToolButton = ({ label, icon, current, setCurrent, customOnClick = null, tooltip }) => (
+  <Tooltip text={tooltip}>
     <div
       className={`p-2 sm:p-4 rounded-lg text-center cursor-pointer hover:bg-gray-400 
         ${current === label.toLowerCase() ? 'bg-blue-500' : 'bg-gray-300'}
@@ -749,7 +801,8 @@ const App = () => {
       <i className={`${icon} text-xl sm:text-2xl`}></i>
       <p className="font-semibold text-xs sm:text-sm mt-1">{label}</p>
     </div>
-  );
+  </Tooltip>
+);
 
   return (
     <div className="flex flex-col h-screen">
@@ -981,9 +1034,9 @@ const App = () => {
                       </div>
                   </div>
 
-                  <div className={`flex ${toolLayout === 'vertical' ? 'flex-row' : 'flex-col'} gap-6`}>
+                  <div className={`flex ${toolLayout === 'vertical' ? 'flex-row ' : 'flex-col items-center justify-center'} gap-6`}>
                     {/* Tool Buttons */}
-                    <div className={toolLayout === 'vertical' ? "flex flex-col gap-2 w-28 shrink-0 overflow-y-auto" : "flex flex-wrap gap-2 w-full"}>
+                    <div className={toolLayout === 'vertical' ? "flex flex-col gap-2 w-28 shrink-0 overflow-y-auto" : "flex flex-wrap gap-2 w-full items-center justify-center"}>
                       {renderToolButtons()}
                     </div>
                   </div>
