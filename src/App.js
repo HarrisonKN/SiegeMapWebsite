@@ -362,7 +362,8 @@ const App = () => {
     let lastTouch = { x: 0, y: 0 };
   
     const onTouchStart = (e) => {
-      if (e.touches.length === 1) {
+      // Only allow panning if Mouse tool is active (or no tool)
+      if ((currentTool === null || currentTool === "mouse") && e.touches.length === 1) {
         isTouching = true;
         lastTouch = {
           x: e.touches[0].clientX,
@@ -398,7 +399,7 @@ const App = () => {
       container.removeEventListener('touchmove', onTouchMove);
       container.removeEventListener('touchend', onTouchEnd);
     };
-  }, []);
+  }, [currentTool]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -935,7 +936,7 @@ const App = () => {
   );
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-[100dvh]">
 
       {/* Header */}
       <div className="bg-gray-800 text-white p-4 flex flex-col sm:flex-row justify-between items-center">
@@ -1351,7 +1352,7 @@ const App = () => {
                 {isOperatorSidebarOpen && (
                   <div className="relative bg-gray-800 text-white w-full sm:w-64 p-4 h-full">
                   <button
-                    className="absolute top-2 right-2 text-white z-50"
+                    className="sm:hidden absolute top-2 right-2 text-white z-50"
                     onClick={() => setIsOperatorSidebarOpen(false)}
                   >
                     <i className="fas fa-times text-xl"></i>
