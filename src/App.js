@@ -36,6 +36,7 @@ const App = () => {
   const [draggingOperator, setDraggingOperator] = useState(null);
   const [draggingTouch, setDraggingTouch] = useState(null); 
   const [selectedOperatorToPlace, setSelectedOperatorToPlace] = useState(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const { user } = useUser();
   const navigate = useNavigate();
@@ -100,7 +101,7 @@ const App = () => {
       alert("Setup saved to your account!");
       setShowModal(false);
     } else {
-      alert("Failed to save setup.");
+      alert("Failed to save setup. Please try again or Submit a Help Request.");
     }
   };
 
@@ -450,6 +451,19 @@ const App = () => {
 
   // Draw the LINE annotation on the canvas
   const drawLine = (ctx, item, scale = zoom) => {
+    // Prevent drawing if points are missing or incomplete
+    if (
+      !item.points ||
+      item.points.length < 2 ||
+      !item.points[0] ||
+      !item.points[1] ||
+      typeof item.points[0].x !== 'number' ||
+      typeof item.points[0].y !== 'number' ||
+      typeof item.points[1].x !== 'number' ||
+      typeof item.points[1].y !== 'number'
+    ) {
+      return;
+    }
     ctx.beginPath();
     ctx.moveTo(item.points[0].x * scale, item.points[0].y * scale);
     ctx.lineTo(item.points[1].x * scale, item.points[1].y * scale);
@@ -627,9 +641,10 @@ const App = () => {
           case 'text':
             const userText = prompt('Enter text:');
             if (userText) {
+              const safeText = userText.replace(/<.*?>/g, '').slice(0, 100);
               saveAnnotationToFloor({
                 type: 'text',
-                text: userText,
+                text: safeText,
                 x: startX,
                 y: startY,
                 color: 'Yellow',
@@ -652,16 +667,48 @@ const App = () => {
         return dx * dx + dy * dy <= threshold * threshold;
       };
     
+
       if (currentTool === 'eraser') {
         const x = pos.x / zoom;
         const y = pos.y / zoom;
         const floorKey = getCurrentFloorKey();
-      
+
         setFloorAnnotations((prev) => {
           const current = prev[floorKey] || [];
           const updated = current.filter((item) => {
             if (item.type === 'pen' || item.type === 'line') {
-              // Check if any point in the stroke is near the eraser
+              // For lines: check if the eraser is near ANY point on the line segment, not just endpoints
+              if (item.type === 'line' && item.points && item.points.length === 2) {
+                // Calculate distance from point to line segment
+                const [p1, p2] = item.points;
+                const distToSegment = (x0, y0, x1, y1, x2, y2) => {
+                  const A = x0 - x1;
+                  const B = y0 - y1;
+                  const C = x2 - x1;
+                  const D = y2 - y1;
+                  const dot = A * C + B * D;
+                  const len_sq = C * C + D * D;
+                  let param = -1;
+                  if (len_sq !== 0) param = dot / len_sq;
+                  let xx, yy;
+                  if (param < 0) {
+                    xx = x1;
+                    yy = y1;
+                  } else if (param > 1) {
+                    xx = x2;
+                    yy = y2;
+                  } else {
+                    xx = x1 + param * C;
+                    yy = y1 + param * D;
+                  }
+                  const dx = x0 - xx;
+                  const dy = y0 - yy;
+                  return Math.sqrt(dx * dx + dy * dy);
+                };
+                // Erase if eraser is near the line segment
+                return distToSegment(x, y, p1.x, p1.y, p2.x, p2.y) > 10 / zoom;
+              }
+              // For pen: check if any point is near the eraser
               return !item.points.some((p) => isPointNear(p.x, p.y, x, y, 10 / zoom));
             } else if (item.type === 'shape') {
               // Normalize the shape's bounding box
@@ -669,7 +716,7 @@ const App = () => {
               const x2 = Math.max(item.x, item.x + item.widthPx);
               const y1 = Math.min(item.y, item.y + item.heightPx);
               const y2 = Math.max(item.y, item.y + item.heightPx);
-      
+
               // Check if the eraser overlaps with the normalized bounding box
               const withinX = x >= x1 && x <= x2;
               const withinY = y >= y1 && y <= y2;
@@ -680,17 +727,17 @@ const App = () => {
             }
             return true;
           });
-      
+
           // Clear cached images for erased shapes
           current.forEach((item) => {
             if (!updated.includes(item) && item.type === 'shape' && item._cachedImage) {
               delete item._cachedImage;
             }
           });
-      
+
           return { ...prev, [floorKey]: updated };
         });
-      
+
         return;
       }
     
@@ -736,15 +783,27 @@ const App = () => {
     };
   
     const stopDrawing = (e) => {
-      if (!drawing) return;
-      drawing = false;
-  
-      if (currentStroke) {
-        saveAnnotationToFloor(currentStroke);
+    if (!drawing) return;
+    drawing = false;
+
+    if (currentStroke) {
+      // Prevent saving a zero-length line (start and end points are the same)
+      if (
+        currentStroke.type === 'line' &&
+        currentStroke.points &&
+        currentStroke.points.length === 2 &&
+        currentStroke.points[0].x === currentStroke.points[1].x &&
+        currentStroke.points[0].y === currentStroke.points[1].y
+      ) {
         currentStroke = null;
+        redrawCanvas();
+        return;
       }
-      redrawCanvas();
-    };
+      saveAnnotationToFloor(currentStroke);
+      currentStroke = null;
+    }
+    redrawCanvas();
+  };
   
     // Add touch events alongside mouse events
     canvas.addEventListener('mousedown', startDrawing);
@@ -936,14 +995,16 @@ const App = () => {
   );
 
   return (
-    <div className="flex flex-col h-[100dvh]">
+<div className="flex flex-col h-[100dvh]">
 
       {/* Header */}
-      <div className="bg-gray-800 text-white p-4 flex flex-col sm:flex-row justify-between items-center">
+      <div className="bg-gray-800 text-white p-4 flex flex-col sm:flex-row justify-between items-center relative">
+        {/* Heading */}
         <div className="text-lg font-semibold text-center sm:text-left w-full sm:w-auto">
           R6 Siege Map Annotations
         </div>
-        <div className="flex flex-row flex-wrap gap-2 w-full sm:w-auto mt-2 sm:mt-0 justify-center items-center">
+        {/* Desktop Menu */}
+        <div className="hidden sm:flex flex-row flex-wrap gap-2 w-full sm:w-auto mt-2 sm:mt-0 justify-center items-center">
           <Link
             to="/"
             className="flex items-center justify-center min-w-[120px] text-center bg-gray-600 px-2 sm:px-4 py-2 rounded text-sm sm:text-base hover:bg-gray-500 active:bg-gray-700 transition duration-150"
@@ -1004,6 +1065,67 @@ const App = () => {
             )}
           </div>
         </div>
+        {/* Mobile Menu Button */}
+        <div className="flex sm:hidden absolute right-4 top-4">
+          <button
+            className="p-2 rounded bg-gray-700 hover:bg-gray-600"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Open menu"
+          >
+            <i className="fas fa-bars text-xl"></i>
+          </button>
+        </div>
+        {/* Mobile Dropdown Menu */}
+        {mobileMenuOpen && (
+          <div className="absolute top-full left-0 w-full bg-gray-800 shadow-lg z-50 flex flex-col items-center py-2">
+            <Link
+              to="/"
+              className="w-full text-center py-2 px-4 hover:bg-gray-700"
+              onClick={() => {
+                setSelectedMap(null);
+                setSelectedFloor(null);
+                setFloorAnnotations({});
+                setPlacedOperators([]);
+                setMobileMenuOpen(false);
+              }}
+            >
+              Home
+            </Link>
+            <Link
+              to="/site-setups"
+              className="w-full text-center py-2 px-4 hover:bg-gray-700"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Site Setups
+            </Link>
+            {user ? (
+              <Link
+                to="/UserAccount"
+                className="w-full text-center py-2 px-4 hover:bg-gray-700"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Account
+              </Link>
+            ) : (
+              <Link
+                to="/auth"
+                className="w-full text-center py-2 px-4 hover:bg-gray-700"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Login/Register
+              </Link>
+            )}
+            <button
+              className="w-full text-center py-2 px-4 hover:bg-gray-700"
+              onClick={() => {
+                setShowSettings(!showSettings);
+                setMobileMenuOpen(false);
+              }}
+            >
+              Settings
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Main Body Layout */}
@@ -1126,17 +1248,125 @@ const App = () => {
 
                         {/* Floor selection buttons for Desktop */}
                         {selectedMap && (
-                          <div className="hidden sm:flex absolute top-4 left-1/2 transform -translate-x-1/2 z-30 flex gap-2 bg-white/80 p-2 rounded shadow">
-                            {selectedMap.floors.map((floor) => (
-                              <button
-                                key={floor.name}
-                                className={`px-3 py-1 rounded font-semibold ${
-                                  selectedFloor?.name === floor.name ? 'bg-blue-500 text-white' : 'bg-white text-gray-700'}`}
-                                onClick={() => handleFloorSelect(floor)}>
-                                {floor.name}
-                              </button>
-                            ))}
-                          </div>
+                          <>
+                            {/* LEFT BOX: Placed Attackers */}
+                            {placedOperators.some(op => op.role === 'Attacker') && (
+                              <div className="hidden sm:flex flex-col absolute top-4 left-4 z-40 bg-white/90 p-2 rounded shadow min-w-[140px] max-w-[180px]">
+                                <div className="font-bold mb-2 text-blue-900">Attackers</div>
+                                {placedOperators.filter(op => op.role === 'Attacker').length === 0 && (
+                                  <div className="text-gray-500 text-xs">None</div>
+                                )}
+                                {placedOperators.filter(op => op.role === 'Attacker').map((op, idx) => (
+                                  <div key={idx} className="mb-2 border-b pb-1">
+                                    <div className="font-semibold">{op.name}</div>
+                                    {/* Unique Ability */}
+                                    {op.uniqueAbility && op.uniqueAbility.name && op.uniqueAbility.name !== 'placeholder' && (
+                                      <div
+                                        draggable
+                                        onDragStart={e => {
+                                          e.dataTransfer.setData('gadget', JSON.stringify({
+                                            type: 'unique',
+                                            operator: op.name,
+                                            name: op.uniqueAbility?.name,
+                                            quantity: op.uniqueAbility?.quantity,
+                                            image: op.image
+                                          }));
+                                        }}
+                                        className="cursor-move text-xs bg-blue-100 rounded px-2 py-1 my-1"
+                                      >
+                                        {op.uniqueAbility?.name} ({op.uniqueAbility?.quantity})
+                                      </div>
+                                    )}
+                                    {/* Secondary Gadgets */}
+                                    {op.secondaryGadgets?.filter(g => g.name && g.name !== 'placeholder').map((g, i) => (
+                                      <div
+                                        key={i}
+                                        draggable
+                                        onDragStart={e => {
+                                          e.dataTransfer.setData('gadget', JSON.stringify({
+                                            type: 'secondary',
+                                            operator: op.name,
+                                            name: g.name,
+                                            quantity: g.quantity,
+                                            image: op.image
+                                          }));
+                                        }}
+                                        className="cursor-move text-xs bg-orange-100 rounded px-2 py-1 my-1"
+                                      >
+                                        {g.name} ({g.quantity})
+                                      </div>
+                                    ))}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* RIGHT BOX: Placed Defenders */}
+                            {placedOperators.some(op => op.role === 'Defender') && (
+                            <div className="hidden sm:flex flex-col absolute top-4 right-4 z-40 bg-white/90 p-2 rounded shadow min-w-[140px] max-w-[180px]">
+                              <div className="font-bold mb-2 text-blue-900">Defenders</div>
+                              {placedOperators.filter(op => op.role === 'Defender').length === 0 && (
+                                <div className="text-gray-500 text-xs">None</div>
+                              )}
+                              {placedOperators.filter(op => op.role === 'Defender').map((op, idx) => (
+                                <div key={idx} className="mb-2 border-b pb-1">
+                                  <div className="font-semibold">{op.name}</div>
+                                  {/* Unique Ability */}
+                                  {op.uniqueAbility && op.uniqueAbility.name && op.uniqueAbility.name !== 'placeholder' && (
+                                    <div
+                                      draggable
+                                      onDragStart={e => {
+                                        e.dataTransfer.setData('gadget', JSON.stringify({
+                                          type: 'unique',
+                                          operator: op.name,
+                                          name: op.uniqueAbility?.name,
+                                          quantity: op.uniqueAbility?.quantity,
+                                          image: op.image
+                                        }));
+                                      }}
+                                      className="cursor-move text-xs bg-blue-100 rounded px-2 py-1 my-1"
+                                    >
+                                      {op.uniqueAbility?.name} ({op.uniqueAbility?.quantity})
+                                    </div>
+                                  )}
+                                  {/* Secondary Gadgets */}
+                                  {op.secondaryGadgets?.filter(g => g.name && g.name !== 'placeholder').map((g, i) => (
+                                    <div
+                                      key={i}
+                                      draggable
+                                      onDragStart={e => {
+                                        e.dataTransfer.setData('gadget', JSON.stringify({
+                                          type: 'secondary',
+                                          operator: op.name,
+                                          name: g.name,
+                                          quantity: g.quantity,
+                                          image: op.image
+                                        }));
+                                      }}
+                                      className="cursor-move text-xs bg-orange-100 rounded px-2 py-1 my-1"
+                                    >
+                                      {g.name} ({g.quantity})
+                                    </div>
+                                  ))}
+                                </div>
+                              ))}
+                            </div>
+                            )}
+
+
+                            {/* Floor Selector */}
+                            <div className="hidden sm:flex absolute top-4 left-1/2 transform -translate-x-1/2 z-30 flex gap-2 bg-white/80 p-2 rounded shadow">
+                              {selectedMap.floors.map((floor) => (
+                                <button
+                                  key={floor.name}
+                                  className={`px-3 py-1 rounded font-semibold ${
+                                    selectedFloor?.name === floor.name ? 'bg-blue-500 text-white' : 'bg-white text-gray-700'}`}
+                                  onClick={() => handleFloorSelect(floor)}>
+                                  {floor.name}
+                                </button>
+                              ))}
+                            </div>
+                          </>
                         )}
 
                         <div className="relative flex-1 h-full flex justify-center items-center">
@@ -1172,12 +1402,16 @@ const App = () => {
                                     src={op.image}
                                     alt={op.name}
                                     title={op.name}
-                                    className={`absolute w-10 h-10 rounded-full border-2 border-white cursor-move z-20 ${draggedOpIndex === index ? 'ring-4 ring-blue-400' : ''}`}
+                                    className={`absolute w-10 h-10 rounded-full border-2 cursor-move z-20 ${draggedOpIndex === index ? 'ring-4 ring-blue-400' : ''}`}
                                     style={{
                                       top: `${op.y}px`,
                                       left: `${op.x}px`,
                                       transform: `scale(${1 / zoom})`,
                                       touchAction: 'none', // Prevents default scrolling while dragging
+                                      borderColor: op.role === 'Attacker' ? '#2563eb' : '#f59e42', // Blue for Attacker, Orange for Defender
+                                      borderStyle: 'solid',
+                                      borderWidth: '3px',
+                                      background: '#fff',
                                     }}                              
                                     onContextMenu={(e) => {
                                       e.preventDefault();
@@ -1310,12 +1544,33 @@ const App = () => {
                                     }
                                   }}
                                   onDrop={e => {
+                                    e.preventDefault();
+                                    const rect = e.target.getBoundingClientRect();
+                                    const x = (e.clientX - rect.left) / zoom;
+                                    const y = (e.clientY - rect.top) / zoom;
+
+                                    // Handle operator drop
                                     if (draggingOperator) {
-                                      const rect = e.target.getBoundingClientRect();
-                                      const x = (e.clientX - rect.left) / zoom;
-                                      const y = (e.clientY - rect.top) / zoom;
                                       setPlacedOperators(prev => [...prev, { ...draggingOperator, x, y }]);
                                       setDraggingOperator(null);
+                                      return;
+                                    }
+
+                                    // Handle gadget/ability drop
+                                    const gadgetData = e.dataTransfer.getData('gadget');
+                                    if (gadgetData) {
+                                      const gadget = JSON.parse(gadgetData);
+                                      // You can push this to a new array, or add to placedOperators, or manage as you wish
+                                      // Example: add to placedOperators as a "gadget" type
+                                      setPlacedOperators(prev => [
+                                        ...prev,
+                                        {
+                                          ...gadget,
+                                          x,
+                                          y,
+                                          type: 'gadget'
+                                        }
+                                      ]);
                                     }
                                   }}
                                   onDragOver={e => e.preventDefault()}

@@ -1,17 +1,29 @@
 import React, { useState } from 'react';
 
-const OperatorSidebar = ({ operators, onOperatorSelect, onClearOperators, zoom, setPlacedOperators, setDraggingOperator, setDraggingTouch, selectedOperatorToPlace, setSelectedOperatorToPlace }) => {
+const OperatorSidebar = ({
+    operators,
+    onClearOperators,
+    zoom,
+    setPlacedOperators,
+    setDraggingOperator,
+    setDraggingTouch,
+    selectedOperatorToPlace,
+    setSelectedOperatorToPlace, 
+  }) => {
+  const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('All');
 
-  const filteredOperators =
-    filter === 'All' ? operators : operators.filter(op => op.role === filter);
+  // Filter by role and search
+  const filteredOperators = operators
+    .filter(op => filter === 'All' || op.role === filter)
+    .filter(op => op.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col pr-6">
       <h2 className="text-xl font-bold mb-4 text-center">Operators</h2>
 
       {/* Filter Buttons */}
-      <div className="flex justify-center gap-2 mb-4">
+      <div className="flex justify-center gap-2 mb-2">
         {['All', 'Attacker', 'Defender'].map((role) => (
           <button
             key={role}
@@ -25,44 +37,55 @@ const OperatorSidebar = ({ operators, onOperatorSelect, onClearOperators, zoom, 
         ))}
       </div>
 
+      {/* Search Bar */}
+      <div className="mb-4 px-2">
+        <input
+          type="text"
+          placeholder="Search operators..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="w-full p-2 rounded border border-gray-300 text-black"
+        />
+      </div>
+
       {/* Scrollable Operator Grid */}
       <div className="flex-1 min-h-0 overflow-y-auto px-2">
         <div className="grid grid-cols-3 gap-4">
-        {filteredOperators.map(op => (
-          <div
-            key={op.name}
-            className={`flex flex-col items-center cursor-pointer hover:bg-gray-700 p-2 rounded transition ${selectedOperatorToPlace?.name === op.name ? 'ring-2 ring-blue-500' : ''}`}
-            draggable
-            onClick={() => setSelectedOperatorToPlace(op)}
-            onDragStart={e => {
-              setDraggingOperator(op);
-              e.dataTransfer.setData('operator', JSON.stringify(op));
-            }}
-            onDragEnd={() => {
-              setDraggingOperator(null);
-            }}
-            onTouchStart={e => {
-              setDraggingOperator(op);
-              setDraggingTouch({
-                startX: e.touches[0].clientX,
-                startY: e.touches[0].clientY,
-              });
-            }}
-            onTouchEnd={() => {
-              setDraggingOperator(null);
-              setDraggingTouch(null);
-            }}
-          >
-            <img
-              src={op.image}
-              alt={op.name}
-              className="cursor-pointer"
-              draggable={false}
-              style={{ pointerEvents: 'none' }} // Prevents the img from blocking parent events
-            />
-            <span className="mt-1 text-sm text-center">{op.name}</span>
-          </div>
-        ))}
+          {filteredOperators.map(op => (
+            <div
+              key={op.name}
+              className={`flex flex-col items-center cursor-pointer hover:bg-gray-700 p-2 rounded transition ${selectedOperatorToPlace?.name === op.name ? 'ring-2 ring-blue-500' : ''}`}
+              draggable
+              onClick={() => setSelectedOperatorToPlace(op)}
+              onDragStart={e => {
+                setDraggingOperator(op);
+                e.dataTransfer.setData('operator', JSON.stringify(op));
+              }}
+              onDragEnd={() => {
+                setDraggingOperator(null);
+              }}
+              onTouchStart={e => {
+                setDraggingOperator(op);
+                setDraggingTouch({
+                  startX: e.touches[0].clientX,
+                  startY: e.touches[0].clientY,
+                });
+              }}
+              onTouchEnd={() => {
+                setDraggingOperator(null);
+                setDraggingTouch(null);
+              }}
+            >
+              <img
+                src={op.image}
+                alt={op.name}
+                className="cursor-pointer"
+                draggable={false}
+                style={{ pointerEvents: 'none' }}
+              />
+              <span className="mt-1 text-sm text-center">{op.name}</span>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -74,7 +97,7 @@ const OperatorSidebar = ({ operators, onOperatorSelect, onClearOperators, zoom, 
         >
             Clear Operators
         </button>
-        </div>
+      </div>
     </div>
   );
 };

@@ -13,6 +13,12 @@ then holding a ctrl + scroll would move the map up and down
 holding shift + scroll would move the map sideways
 
 
+MAP STILL DOESNT FUCKING MOVE ON MOBILE DEVICES
+
+Still the map viewer functionality not great, the scrolling and zooming is not very good and maybe
+should add just dragging with the mouse to move the map around
+
+operator blending between maps, should only show on each level
 
 
 
@@ -29,11 +35,12 @@ Gadgets should be click and click again to place
 
 live streaming / collaboration of site setup. 1 person is creating x amount are watching
 
-Adding user accounts/ profiles (DONE) -> followers maybe -> saving (DONE) / posting site setups from their accounts
+Adding user accounts/ profiles (DONE) -> followers maybe -> saving (DONE) / posting site setups from their accounts (DONE)
 \/\/\/
-Global market??? of site setups that anyone can view and save
+Global market??? of site setups that anyone can view and save (DONE)
 
-
+(Users can make an account and save site setups to their account, then further post them to
+    the site setups page where any other users can view them and save them to their own accounts)
 
 
 ---------------------------------------------------------------------------------------------------------------
