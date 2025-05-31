@@ -10,8 +10,20 @@ const AuthPage = () => {
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [error, setError] = useState('');
+  const [showReset, setShowReset] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetMsg, setResetMsg] = useState('');
   const { setUser } = useUser();
   const navigate = useNavigate();
+
+  
+  const handlePasswordReset = async (e) => {
+    e.preventDefault();
+    setResetMsg('');
+    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail);
+    if (error) setResetMsg(error.message);
+    else setResetMsg('Password reset email sent!');
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -99,6 +111,15 @@ const AuthPage = () => {
               onChange={e => setPassword(e.target.value)}
               required
             />
+            {isLogin && (
+              <button
+                type="button"
+                className="text-blue-500 text-sm mt-2 hover:underline focus:outline-none"
+                onClick={() => setShowReset(true)}
+              >
+                Forgot Password?
+              </button>
+            )}
           </div>
           {!isLogin && (
             <div className="mb-4">
@@ -134,6 +155,39 @@ const AuthPage = () => {
           </button>
         </p>
       </div>
+      {showReset && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded shadow w-full max-w-sm">
+            <h2 className="text-lg font-bold mb-2">Reset Password</h2>
+            <form onSubmit={handlePasswordReset}>
+              <input
+                type="email"
+                className="w-full p-2 border border-gray-300 rounded mb-2"
+                placeholder="Enter your email"
+                value={resetEmail}
+                onChange={e => setResetEmail(e.target.value)}
+                required
+              />
+              {resetMsg && <div className="mb-2 text-sm text-green-600">{resetMsg}</div>}
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                >
+                  Send Reset Email
+                </button>
+                <button
+                  type="button"
+                  className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400"
+                  onClick={() => { setShowReset(false); setResetMsg(''); }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

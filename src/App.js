@@ -10,6 +10,7 @@ import UserAccountPage from './components/UserAccountsPage';
 import AuthPage from './components/UserLoginRegPage';
 import { supabase } from './supabaseClient';
 import { useUser } from './context/UserContext';
+import ResetPasswordPage from './components/ResetPasswordPage';
 
 import './styles.css';
 
@@ -1646,6 +1647,7 @@ const App = () => {
           <Route path="/site-setups" element={<ForumPage handleLoadSetup={handleLoadSetup} />} />
           <Route path="/UserAccount" element={<UserAccountPage handleLoadSetup={handleLoadSetup}/>} />
           <Route path="/auth" element={<AuthPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
         </Routes>
       </div>
     </div>
