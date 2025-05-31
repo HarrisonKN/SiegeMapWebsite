@@ -31,7 +31,7 @@ const ResetPasswordPage = () => {
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100">
-      <form onSubmit={handleSubmit} className="bg-white p-6 rounded shadow w-full max-w-sm">
+      <form onSubmit={handleSubmit} className="bg-white p-6 rounded shadow w-full max-w-sm mx-auto">
         <h2 className="text-lg font-bold mb-4">Set New Password</h2>
         {error && <div className="mb-2 text-red-600">{error}</div>}
         {msg && <div className="mb-2 text-green-600">{msg}</div>}

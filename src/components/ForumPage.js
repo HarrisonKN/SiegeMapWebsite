@@ -10,6 +10,7 @@ const ForumPage = ({handleLoadSetup}) => {
       .from('site_setups')
       .select('*')
       .eq('is_posted', true)
+      .order('created_at', { ascending: false })
       .then(({ data, error }) => {
         if (!error) setForumSetups(data);
       });

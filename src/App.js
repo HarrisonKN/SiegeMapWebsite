@@ -867,22 +867,24 @@ const App = () => {
         className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow"
         onClick={() => setShowModal(true)}>Save Setup</button>
 
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded shadow-lg">
-            <h2 className="text-xl font-bold mb-4">Save Setup</h2>
-            <button 
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow"
-              onClick={handleSaveAsImage}>Download Image</button>
-            <button 
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow"
-              onClick={handleSaveToAccount}>Save to Account</button>
-            <button
-              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded shadow"
-              onClick={() => setShowModal(false)}>Cancel</button>
+        {showModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded shadow-lg">
+              <h2 className="text-xl font-bold mb-4 text-center">Save Setup</h2>
+              <div className="flex flex-col gap-3">
+                <button 
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow"
+                  onClick={handleSaveAsImage}>Download Image</button>
+                <button 
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow"
+                  onClick={handleSaveToAccount}>Save to Account</button>
+                <button
+                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded shadow"
+                  onClick={() => setShowModal(false)}>Cancel</button>
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+        )}
       
       <div className="flex flex-col items-center ml-2">
         <span className="text-xs text-gray-700 font-semibold mb-1">Zoom:{Math.round(zoom * 100)}%</span>
