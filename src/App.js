@@ -46,8 +46,16 @@ const App = () => {
   const canvasRef = useRef(null);
   const { zoom, setZoom } = useAppContext();
   const scrollRef = useRef(null);
-  const zoomRef = useRef(zoom);
-  const lastZoomCenter = useRef(null);
+  const zoomRef = useRef(1); // Set initial zoom to 1
+  const lastZoomCenter = useRef(null); // <-- Add this line
+
+  // Add these two refs here:
+  const drawingRef = useRef(false);
+  const currentStrokeRef = useRef(null);
+
+  // Add refs for panning state and last mouse position
+  const panActiveRef = useRef(false);
+  const lastPanPosRef = useRef({ x: 0, y: 0 });
 
   // Hook to get the current route
   const location = useLocation();
@@ -429,6 +437,77 @@ const App = () => {
     };
   }, [currentTool]);
 
+  // Add mouse-based panning to the scroll container
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+  
+    let isPanning = false;
+    let lastX = 0, lastY = 0;
+    let animationFrame = null;
+    let pendingDX = 0, pendingDY = 0;
+  
+    const onMouseDown = (e) => {
+      // Only allow panning if Mouse tool is active (or no tool) and NOT dragging an operator
+      if ((currentTool === null || currentTool === "mouse") && e.button === 0 && draggedOpIndex === null) {
+        isPanning = true;
+        panActiveRef.current = true;
+        lastX = e.clientX;
+        lastY = e.clientY;
+        container.style.cursor = "grabbing";
+        e.preventDefault();
+      }
+    };
+  
+    const panStep = () => {
+      if (pendingDX !== 0 || pendingDY !== 0) {
+        container.scrollLeft -= pendingDX;
+        container.scrollTop -= pendingDY;
+        pendingDX = 0;
+        pendingDY = 0;
+      }
+      if (isPanning) {
+        animationFrame = requestAnimationFrame(panStep);
+      }
+    };
+  
+    const onMouseMove = (e) => {
+      if (!isPanning || !(currentTool === null || currentTool === "mouse")) return;
+      const dx = e.clientX - lastX;
+      const dy = e.clientY - lastY;
+      if (dx !== 0 || dy !== 0) {
+        pendingDX += dx;
+        pendingDY += dy;
+        lastX = e.clientX;
+        lastY = e.clientY;
+        if (!animationFrame) {
+          animationFrame = requestAnimationFrame(panStep);
+        }
+      }
+    };
+  
+    const onMouseUp = () => {
+      isPanning = false;
+      panActiveRef.current = false;
+      container.style.cursor = "";
+      if (animationFrame) {
+        cancelAnimationFrame(animationFrame);
+        animationFrame = null;
+      }
+    };
+  
+    container.addEventListener("mousedown", onMouseDown);
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+  
+    return () => {
+      container.removeEventListener("mousedown", onMouseDown);
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+      if (animationFrame) cancelAnimationFrame(animationFrame);
+    };
+  }, [currentTool, draggedOpIndex]);
+
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 640) {
@@ -609,9 +688,7 @@ const App = () => {
     if (!canvas) return;
   
     const ctx = canvas.getContext('2d');
-    let drawing = false;
     let startX = 0, startY = 0;
-    let currentStroke = null;
   
     const resizeCanvas = () => {
       canvas.width = canvas.offsetWidth;
@@ -634,11 +711,11 @@ const App = () => {
       const pos = getPos(e);
       startX = pos.x / zoom;
       startY = pos.y / zoom;
-      drawing = true;
+      drawingRef.current = true;
   
       switch (currentTool) {
         case 'pen':
-          currentStroke = {
+          currentStrokeRef.current = {
             type: 'pen',
             color: 'red',
             width: 3,
@@ -646,7 +723,7 @@ const App = () => {
           };
           break;
         case 'line':
-          currentStroke = {
+          currentStrokeRef.current = {
             type: 'line',
             color: 'blue',
             width: 3,
@@ -654,7 +731,7 @@ const App = () => {
           };
           break;
         case 'shape':
-          currentStroke = {
+          currentStrokeRef.current = {
             type: 'shape',
             color: 'green',
             width: 3,
@@ -678,13 +755,13 @@ const App = () => {
                 size: 20,
               });
             }
-            drawing = false;
+            drawingRef.current = false;
             break;
       }
     };
   
     const draw = (e) => {
-      if (!drawing && currentTool !== 'eraser') return; // Allow erasing even if not "drawing"
+      if (!drawingRef.current && currentTool !== 'eraser') return; // Allow erasing even if not "drawing"
       e.preventDefault();
       const pos = getPos(e);
     
@@ -775,17 +852,17 @@ const App = () => {
     
       switch (currentTool) {
         case 'pen':
-          currentStroke.points.push(canvasPos);
+          currentStrokeRef.current.points.push(canvasPos);
           break;
         case 'line':
-          currentStroke.points = [
+          currentStrokeRef.current.points = [
             { x: startX, y: startY },
             canvasPos,
           ];
           break;
         case 'shape':
-          currentStroke.widthPx = canvasPos.x - startX;
-          currentStroke.heightPx = canvasPos.y - startY;
+          currentStrokeRef.current.widthPx = canvasPos.x - startX;
+          currentStrokeRef.current.heightPx = canvasPos.y - startY;
           break;
       }
     
@@ -794,40 +871,40 @@ const App = () => {
       const currentAnnotations = floorAnnotations[floorKey] || [];
       drawAnnotations(ctx, currentAnnotations);
     
-      if (currentStroke) {
-        switch (currentStroke.type) {
+      if (currentStrokeRef.current) {
+        switch (currentStrokeRef.current.type) {
           case 'pen':
-            drawStroke(ctx, currentStroke);
+            drawStroke(ctx, currentStrokeRef.current);
             break;
           case 'line':
-            drawLine(ctx, currentStroke);
+            drawLine(ctx, currentStrokeRef.current);
             break;
           case 'shape':
-            drawShape(ctx, currentStroke);
+            drawShape(ctx, currentStrokeRef.current);
             break;
         }
       }
     };
   
     const stopDrawing = (e) => {
-    if (!drawing) return;
-    drawing = false;
+    if (!drawingRef.current) return;
+    drawingRef.current = false;
 
-    if (currentStroke) {
+    if (currentStrokeRef.current) {
       // Prevent saving a zero-length line (start and end points are the same)
       if (
-        currentStroke.type === 'line' &&
-        currentStroke.points &&
-        currentStroke.points.length === 2 &&
-        currentStroke.points[0].x === currentStroke.points[1].x &&
-        currentStroke.points[0].y === currentStroke.points[1].y
+        currentStrokeRef.current.type === 'line' &&
+        currentStrokeRef.current.points &&
+        currentStrokeRef.current.points.length === 2 &&
+        currentStrokeRef.current.points[0].x === currentStrokeRef.current.points[1].x &&
+        currentStrokeRef.current.points[0].y === currentStrokeRef.current.points[1].y
       ) {
-        currentStroke = null;
+        currentStrokeRef.current = null;
         redrawCanvas();
         return;
       }
-      saveAnnotationToFloor(currentStroke);
-      currentStroke = null;
+      saveAnnotationToFloor(currentStrokeRef.current);
+      currentStrokeRef.current = null;
     }
     redrawCanvas();
   };
@@ -850,7 +927,7 @@ const App = () => {
       canvas.removeEventListener('touchend', stopDrawing);
       window.removeEventListener('resize', resizeCanvas);
     };
-  }, [currentTool, selectedMap, selectedFloor, zoom, floorAnnotations]);
+  }, [currentTool, selectedMap, selectedFloor, zoom, floorAnnotations, selectedOperatorToPlace]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -865,6 +942,11 @@ const App = () => {
     const currentAnnotations = floorAnnotations[floorKey] || [];
     drawAnnotations(ctx, currentAnnotations);
   }, [floorAnnotations, zoom, selectedFloor, selectedMap]);
+
+  // Keep zoomRef in sync with zoom state
+  useEffect(() => {
+    zoomRef.current = zoom;
+  }, [zoom]);
   
   const renderToolButtons = () => (
     <>
@@ -925,12 +1007,12 @@ const App = () => {
       
       <div className="flex flex-col items-center ml-2">
         <div className={`flex gap-1 ${toolLayout === 'vertical' ? 'flex-col' : 'flex-row'}`}>
-          <ZoomButton label="Zoom In" icon="fas fa-search-plus" onClick={() => setZoom(prev => Math.min(prev + 0.1, 3))} />
+          <ZoomButton label="Zoom In" icon="fas fa-search-plus" onClick={() => setZoom(prev => Math.min(prev + 0.2, 5))} />
           <div>
             <span className="w-full text-center font-bold text-xs sm:text-base mb-1">Zoom:{Math.round(zoom * 100)}%</span>
             <ZoomButton label="Reset" icon="fas fa-compress" onClick={() => setZoom(1)} />
           </div>
-          <ZoomButton label="Zoom Out" icon="fas fa-search-minus" onClick={() => setZoom(prev => Math.max(prev - 0.1, 0.5))} />
+          <ZoomButton label="Zoom Out" icon="fas fa-search-minus" onClick={() => setZoom(prev => Math.max(prev - 0.2, 0.2))} />
 
         </div>
       </div>
@@ -961,11 +1043,14 @@ const App = () => {
 
   const handleFloorSelect = (floor) => {
     setSelectedFloor(floor);
-    // Reset scroll position after floor select
+    // Center the map after floor select
     setTimeout(() => {
-      if (scrollRef.current) {
-        scrollRef.current.scrollLeft = 0;
-        scrollRef.current.scrollTop = 0;
+      if (scrollRef.current && mapSize.width && mapSize.height) {
+        const container = scrollRef.current;
+        const zoomedWidth = mapSize.width * zoom;
+        const zoomedHeight = mapSize.height * zoom;
+        container.scrollLeft = Math.max(0, (zoomedWidth - container.clientWidth) / 2);
+        container.scrollTop = Math.max(0, (zoomedHeight - container.clientHeight) / 2);
       }
     }, 0);
   };
@@ -1235,12 +1320,12 @@ const App = () => {
                 
                   {/* Floor buttons for mobile */}
                   {selectedMap && (
-                    <div className="sm:hidden w-full flex justify-center gap-1 bg-white/90 p-1 rounded shadow mb-2 z-30">
+                    <div className="w-full flex justify-center gap-2 bg-white/90 p-2 rounded shadow mb-2 z-10">
                       {selectedMap.floors.map((floor) => (
                         <button
                           key={floor.name}
-                          className={`px-2 py-1 rounded font-semibold text-xs
-                            ${selectedFloor?.name === floor.name ? 'bg-blue-500 text-white' : 'bg-white text-gray-700'}
+                          className={`px-3 py-1 rounded font-semibold ${
+                            selectedFloor?.name === floor.name ? 'bg-blue-500 text-white' : 'bg-white text-gray-700'}
                             border border-gray-300`}
                           onClick={() => handleFloorSelect(floor)}
                         >
@@ -1251,436 +1336,502 @@ const App = () => {
                   )}
                   
                   {/* Map Viewer */}
-                  <div className="relative bg-gray-200 flex-1 flex justify-center items-center rounded overflow-hidden">
-                    <div className="w-full h-full overflow-auto relative cursor-grab active:cursor-grabbing"
-                        style={{
-                          display: 'flex',
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                          position: 'relative',
-                          minHeight: '100%',
-                          minWidth: '100%'
-                        }}
-                        onWheel={(e) => {
-                          e.preventDefault();
-                          const container = scrollRef.current;
-                          if (!container) return;
-                                                
-                          const scrollLeft = container.scrollLeft;
-                          const scrollTop = container.scrollTop;
-                        
-                          // Calculate the center of the viewport
-                          const viewportCenterX = scrollLeft + container.clientWidth / 2;
-                          const viewportCenterY = scrollTop + container.clientHeight / 2;
-                        
-                          const oldZoom = zoomRef.current;
-                          const newZoom = e.deltaY < 0 ? Math.min(zoom + 0.1, 3) : Math.max(zoom - 0.1, 0.5);
-                        
-                          // Calculate the scale factor
-                          const scale = newZoom / oldZoom;
-                        
-                          // Adjust scroll position to keep the center of the viewport in place
-                          const newScrollLeft = viewportCenterX * scale - container.clientWidth / 2;
-                          const newScrollTop = viewportCenterY * scale - container.clientHeight / 2;
-                        
-                          container.scrollLeft = newScrollLeft;
-                          container.scrollTop = newScrollTop;
-                        
-                          zoomRef.current = newZoom;
-                          setZoom(newZoom);
-                        
-                          redrawCanvas();
-                        }}>
+                  <div
+                    className="relative bg-gray-200 flex-1 flex justify-center items-center rounded overflow-hidden"
+                    style={{
+                      minWidth: 0,
+                      minHeight: 0,
+                      width: '100%',
+                      height: '100%',
+                      position: 'relative',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    {/* Operator Gadgets/Abilities Boxes - OUTSIDE scrollable area */}
+                    {selectedMap && (
+                      <>
+                        {/* LEFT BOX: Placed Attackers */}
+                        {Object.values(placedOperatorsByFloor).flat().some(op => op.role === 'Attacker') && (
+                          <div
+                            className="hidden sm:flex flex-col"
+                            style={{
+                              position: 'absolute',
+                              top: 16,
+                              left: 16,
+                              zIndex: 50,
+                              background: 'rgba(255,255,255,0.95)',
+                              padding: '12px',
+                              borderRadius: '8px',
+                              minWidth: '140px',
+                              maxWidth: '220px',
+                              boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                            }}
+                          >
+                            <div className="font-bold mb-2 text-blue-900">Attackers</div>
+                            {Object.values(placedOperatorsByFloor).flat().filter(op => op.role === 'Attacker').length === 0 && (
+                              <div className="text-gray-500 text-xs">None</div>
+                            )}
+                            {Object.values(placedOperatorsByFloor).flat().filter(op => op.role === 'Attacker').map((op, idx) => (
+                              <div key={idx} className="mb-2 border-b pb-1">
+                                <div className="font-semibold">{op.name}</div>
+                                {/* Unique Ability */}
+                                {op.uniqueAbility && op.uniqueAbility.name && op.uniqueAbility.name !== 'placeholder' && (
+                                  <div
+                                    draggable
+                                    onDragStart={e => {
+                                      e.dataTransfer.setData('gadget', JSON.stringify({
+                                        type: 'unique',
+                                        operator: op.name,
+                                        name: op.uniqueAbility?.name,
+                                        quantity: op.uniqueAbility?.quantity,
+                                        image: op.image
+                                      }));
+                                    }}
+                                    className="cursor-move text-xs bg-blue-100 rounded px-2 py-1 my-1"
+                                  >
+                                    {op.uniqueAbility?.name} ({op.uniqueAbility?.quantity})
+                                  </div>
+                                )}
+                                {/* Secondary Gadgets */}
+                                {op.secondaryGadgets?.filter(g => g.name && g.name !== 'placeholder').map((g, i) => (
+                                  <div
+                                    key={i}
+                                    draggable
+                                    onDragStart={e => {
+                                      e.dataTransfer.setData('gadget', JSON.stringify({
+                                        type: 'secondary',
+                                        operator: op.name,
+                                        name: g.name,
+                                        quantity: g.quantity,
+                                        image: op.image
+                                      }));
+                                    }}
+                                    className="cursor-move text-xs bg-orange-100 rounded px-2 py-1 my-1"
+                                  >
+                                    {g.name} ({g.quantity})
+                                  </div>
+                                ))}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* RIGHT BOX: Placed Defenders */}
+                        {Object.values(placedOperatorsByFloor).flat().some(op => op.role === 'Defender') && (
+                          <div
+                            className="hidden sm:flex flex-col"
+                            style={{
+                              position: 'absolute',
+                              top: 16,
+                              right: 16,
+                              zIndex: 50,
+                              background: 'rgba(255,255,255,0.95)',
+                              padding: '12px',
+                              borderRadius: '8px',
+                              minWidth: '140px',
+                              maxWidth: '220px',
+                              boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                            }}
+                          >
+                            <div className="font-bold mb-2 text-blue-900">Defenders</div>
+                            {Object.values(placedOperatorsByFloor).flat().filter(op => op.role === 'Defender').length === 0 && (
+                              <div className="text-gray-500 text-xs">None</div>
+                            )}
+                            {Object.values(placedOperatorsByFloor).flat().filter(op => op.role === 'Defender').map((op, idx) => (
+                              <div key={idx} className="mb-2 border-b pb-1">
+                                <div className="font-semibold">{op.name}</div>
+                                {/* Unique Ability */}
+                                {op.uniqueAbility && op.uniqueAbility.name && op.uniqueAbility.name !== 'placeholder' && (
+                                  <div
+                                    draggable
+                                    onDragStart={e => {
+                                      e.dataTransfer.setData('gadget', JSON.stringify({
+                                        type: 'unique',
+                                        operator: op.name,
+                                        name: op.uniqueAbility?.name,
+                                        quantity: op.uniqueAbility?.quantity,
+                                        image: op.image
+                                      }));
+                                    }}
+                                    className="cursor-move text-xs bg-blue-100 rounded px-2 py-1 my-1"
+                                  >
+                                    {op.uniqueAbility?.name} ({op.uniqueAbility?.quantity})
+                                  </div>
+                                )}
+                                {/* Secondary Gadgets */}
+                                {op.secondaryGadgets?.filter(g => g.name && g.name !== 'placeholder').map((g, i) => (
+                                  <div
+                                    key={i}
+                                    draggable
+                                    onDragStart={e => {
+                                      e.dataTransfer.setData('gadget', JSON.stringify({
+                                        type: 'secondary',
+                                        operator: op.name,
+                                        name: g.name,
+                                        quantity: g.quantity,
+                                        image: op.image
+                                      }));
+                                    }}
+                                    className="cursor-move text-xs bg-orange-100 rounded px-2 py-1 my-1"
+                                  >
+                                    {g.name} ({g.quantity})
+                                  </div>
+                                ))}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                    {/* Map scrollable area */}
+                    <div
+                      className="overflow-auto"
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        position: 'relative',
+                        overflow: 'auto',
+                        background: 'transparent',
+                      }}
+                      onWheel={(e) => {
+                        e.preventDefault();
+                        const container = scrollRef.current;
+                        if (!container) return;
+                                              
+                        const scrollLeft = container.scrollLeft;
+                        const scrollTop = container.scrollTop;
+                      
+                        // Calculate the center of the viewport
+                        const viewportCenterX = scrollLeft + container.clientWidth / 2;
+                        const viewportCenterY = scrollTop + container.clientHeight / 2;
+                      
+                        const oldZoom = zoomRef.current;
+                        // Use a larger zoom step and wider range
+                        const zoomStep = 0.2;
+                        const minZoom = 0.2;
+                        const maxZoom = 5;
+                        const newZoom = e.deltaY < 0
+                          ? Math.min(zoom + zoomStep, maxZoom)
+                          : Math.max(zoom - zoomStep, minZoom);
+                      
+                        const scale = newZoom / oldZoom;
+                      
+                        // Adjust scroll position to keep the center of the viewport in place
+                        const newScrollLeft = viewportCenterX * scale - container.clientWidth / 2;
+                        const newScrollTop = viewportCenterY * scale - container.clientHeight / 2;
+                      
+                        container.scrollLeft = newScrollLeft;
+                        container.scrollTop = newScrollTop;
+                      
+                        zoomRef.current = newZoom;
+                        setZoom(newZoom);
+                      
+                        redrawCanvas();
+                      }}
+                      ref={scrollRef}
+                    >
 
                         {/* Floor selection buttons for Desktop */}
                         {selectedMap && (
                           <>
                             {/* LEFT BOX: Placed Attackers */}
-                            {Object.values(placedOperatorsByFloor).flat().some(op => op.role === 'Attacker') && (
-                              <div className="hidden sm:flex flex-col absolute top-4 left-4 z-40 bg-white/90 p-2 rounded shadow min-w-[140px] max-w-[180px]">
-                                <div className="font-bold mb-2 text-blue-900">Attackers</div>
-                                {Object.values(placedOperatorsByFloor).flat().filter(op => op.role === 'Attacker').length === 0 && (
-                                  <div className="text-gray-500 text-xs">None</div>
-                                )}
-                                {Object.values(placedOperatorsByFloor).flat().filter(op => op.role === 'Attacker').map((op, idx) => (
-                                  <div key={idx} className="mb-2 border-b pb-1">
-                                    <div className="font-semibold">{op.name}</div>
-                                    {/* Unique Ability */}
-                                    {op.uniqueAbility && op.uniqueAbility.name && op.uniqueAbility.name !== 'placeholder' && (
-                                      <div
-                                        draggable
-                                        onDragStart={e => {
-                                          e.dataTransfer.setData('gadget', JSON.stringify({
-                                            type: 'unique',
-                                            operator: op.name,
-                                            name: op.uniqueAbility?.name,
-                                            quantity: op.uniqueAbility?.quantity,
-                                            image: op.image
-                                          }));
-                                        }}
-                                        className="cursor-move text-xs bg-blue-100 rounded px-2 py-1 my-1"
-                                      >
-                                        {op.uniqueAbility?.name} ({op.uniqueAbility?.quantity})
-                                      </div>
-                                    )}
-                                    {/* Secondary Gadgets */}
-                                    {op.secondaryGadgets?.filter(g => g.name && g.name !== 'placeholder').map((g, i) => (
-                                      <div
-                                        key={i}
-                                        draggable
-                                        onDragStart={e => {
-                                          e.dataTransfer.setData('gadget', JSON.stringify({
-                                            type: 'secondary',
-                                            operator: op.name,
-                                            name: g.name,
-                                            quantity: g.quantity,
-                                            image: op.image
-                                          }));
-                                        }}
-                                        className="cursor-move text-xs bg-orange-100 rounded px-2 py-1 my-1"
-                                      >
-                                        {g.name} ({g.quantity})
-                                      </div>
-                                    ))}
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-
+                            {/* --- REMOVE THIS GADGETS BOX INSIDE MAP AREA --- */}
                             {/* RIGHT BOX: Placed Defenders */}
-                            {Object.values(placedOperatorsByFloor).flat().some(op => op.role === 'Defender') && (
-                              <div className="hidden sm:flex flex-col absolute top-4 right-4 z-40 bg-white/90 p-2 rounded shadow min-w-[140px] max-w-[180px]">
-                                <div className="font-bold mb-2 text-blue-900">Defenders</div>
-                                {Object.values(placedOperatorsByFloor).flat().filter(op => op.role === 'Defender').length === 0 && (
-                                  <div className="text-gray-500 text-xs">None</div>
-                                )}
-                                {Object.values(placedOperatorsByFloor).flat().filter(op => op.role === 'Defender').map((op, idx) => (
-                                <div key={idx} className="mb-2 border-b pb-1">
-                                  <div className="font-semibold">{op.name}</div>
-                                  {/* Unique Ability */}
-                                  {op.uniqueAbility && op.uniqueAbility.name && op.uniqueAbility.name !== 'placeholder' && (
-                                    <div
-                                      draggable
-                                      onDragStart={e => {
-                                        e.dataTransfer.setData('gadget', JSON.stringify({
-                                          type: 'unique',
-                                          operator: op.name,
-                                          name: op.uniqueAbility?.name,
-                                          quantity: op.uniqueAbility?.quantity,
-                                          image: op.image
-                                        }));
-                                      }}
-                                      className="cursor-move text-xs bg-blue-100 rounded px-2 py-1 my-1"
-                                    >
-                                      {op.uniqueAbility?.name} ({op.uniqueAbility?.quantity})
-                                    </div>
-                                  )}
-                                  {/* Secondary Gadgets */}
-                                  {op.secondaryGadgets?.filter(g => g.name && g.name !== 'placeholder').map((g, i) => (
-                                    <div
-                                      key={i}
-                                      draggable
-                                      onDragStart={e => {
-                                        e.dataTransfer.setData('gadget', JSON.stringify({
-                                          type: 'secondary',
-                                          operator: op.name,
-                                          name: g.name,
-                                          quantity: g.quantity,
-                                          image: op.image
-                                        }));
-                                      }}
-                                      className="cursor-move text-xs bg-orange-100 rounded px-2 py-1 my-1"
-                                    >
-                                      {g.name} ({g.quantity})
-                                    </div>
-                                  ))}
-                                </div>
-                              ))}
-                            </div>
-                            )}
-
-
-                            {/* Floor Selector */}
-                            <div className="hidden sm:flex absolute top-4 left-1/2 transform -translate-x-1/2 z-30 flex gap-2 bg-white/80 p-2 rounded shadow">
-                              {selectedMap.floors.map((floor) => (
-                                <button
-                                  key={floor.name}
-                                  className={`px-3 py-1 rounded font-semibold ${
-                                    selectedFloor?.name === floor.name ? 'bg-blue-500 text-white' : 'bg-white text-gray-700'}`}
-                                  onClick={() => handleFloorSelect(floor)}>
-                                  {floor.name}
-                                </button>
-                              ))}
-                            </div>
+                            {/* --- REMOVE THIS GADGETS BOX INSIDE MAP AREA --- */}
                           </>
                         )}
 
-                        <div className="relative flex-1 h-full flex justify-center items-center">
-                          { /*Scrollable Area*/}
+                        {selectedMap && selectedFloor ? (
                           <div
-                            className="relative flex-1 h-full flex justify-center items-center"
-                            ref={scrollRef}>
-                            {selectedMap ? (
-                              <div
+                            style={{
+                              position: 'relative',
+                              width: `${mapSize.width * zoom}px`,
+                              height: `${mapSize.height * zoom}px`,
+                              minWidth: '1px',
+                              minHeight: '1px',
+                              background: 'transparent',
+                            }}
+                          >
+                            {/* Map Image */}
+                            <img
+                              src={selectedFloor?.image || selectedMap.thumbnail}
+                              alt={`${selectedMap.name} - ${selectedFloor?.name || 'Overview'}`}
+                              style={{
+                                width: '100%',
+                                height: '100%',
+                                objectFit: 'contain',
+                                display: 'block',
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                zIndex: 1,
+                                pointerEvents: 'none',
+                              }}
+                            />
+                            {/* Placed Operators */}
+                            {operatorsToShow.map((op, index) => (
+                              <img
+                                key={index}
+                                src={op.image}
+                                alt={op.name}
+                                title={op.name}
+                                className={`absolute rounded-full border-2 cursor-move z-20 ${draggedOpIndex === index ? 'ring-4 ring-blue-400' : ''}`}
                                 style={{
-                                  transform: `scale(${zoom})`,
-                                  transformOrigin: 'center center',
-                                  transition: 'transform 0.1s ease-out',
-                                  position: 'relative',
-                                  width: `${mapSize.width}px`,
-                                  height: `${mapSize.height}px`,
-                                }}>
-                                {/* Map Image */}
-                                <img
-                                  src={selectedFloor?.image || selectedMap.thumbnail}
-                                  alt={`${selectedMap.name} - ${selectedFloor?.name || 'Overview'}`}
-                                  className="absolute inset-0 w-full h-full object-contain pointer-events-none"
-                                  style={{
-                                    width: `${mapSize.width}px`,
-                                    height: `${mapSize.height}px`,
-                                  }}
-                                />
-
-                                {/* Placed Operators */}
-                                {operatorsToShow.map((op, index) => (
-                                  <img
-                                    key={index}
-                                    src={op.image}
-                                    alt={op.name}
-                                    title={op.name}
-                                    className={`absolute w-10 h-10 rounded-full border-2 cursor-move z-20 ${draggedOpIndex === index ? 'ring-4 ring-blue-400' : ''}`}
-                                    style={{
-                                      top: `${op.y}px`,
-                                      left: `${op.x}px`,
-                                      transform: `scale(${1 / zoom})`,
-                                      touchAction: 'none',
-                                      borderColor: op.role === 'Attacker' ? '#2563eb' : '#f59e42',
-                                      borderStyle: 'solid',
-                                      borderWidth: '3px',
-                                      background: '#fff',
-                                    }}
-                                    onContextMenu={e => {
-                                      e.preventDefault();
+                                  top: `${op.y * zoom}px`,
+                                  left: `${op.x * zoom}px`,
+                                  width: '64px',
+                                  height: '64px',
+                                  touchAction: 'none',
+                                  borderColor: op.role === 'Attacker' ? '#2563eb' : '#f59e42',
+                                  borderStyle: 'solid',
+                                  borderWidth: '3px',
+                                  background: '#fff',
+                                }}
+                                onContextMenu={e => {
+                                  e.preventDefault();
+                                  const floorKey = getCurrentFloorKey();
+                                  setPlacedOperatorsByFloor(prev => ({
+                                    ...prev,
+                                    [floorKey]: (prev[floorKey] || []).filter((_, i) => i !== index)
+                                  }));
+                                }}
+                                onDragStart={e => {
+                                  setDraggedOpIndex(index);
+                                  dragOffsetRef.current = {
+                                    x: e.clientX - op.x * zoom,
+                                    y: e.clientY - op.y * zoom,
+                                  };
+                                  e.dataTransfer.setData('movingIndex', index);
+                                }}
+                                onDragEnd={e => {
+                                  setDraggedOpIndex(null);
+                                  const floorKey = getCurrentFloorKey();
+                                  const rect = e.target.parentElement.getBoundingClientRect();
+                                  const newX = (e.clientX - rect.left) / zoom;
+                                  const newY = (e.clientY - rect.top) / zoom;
+                                  setPlacedOperatorsByFloor(prev => ({
+                                    ...prev,
+                                    [floorKey]: (prev[floorKey] || []).map((op, i) =>
+                                      i === index ? { ...op, x: newX, y: newY } : op
+                                    )
+                                  }));
+                                }}
+                                onTouchStart={e => {
+                                  setDraggedOpIndex(index);
+                                  const touch = e.touches[0];
+                                  dragOffsetRef.current = {
+                                    x: touch.clientX - op.x * zoom,
+                                    y: touch.clientY - op.y * zoom,
+                                  };
+                                }}
+                                onTouchMove={e => {
+                                  if (draggedOpIndex === index) {
+                                    e.preventDefault();
+                                    const touch = e.touches[0];
+                                    const floorKey = getCurrentFloorKey();
+                                    setPlacedOperatorsByFloor(prev => ({
+                                      ...prev,
+                                      [floorKey]: (prev[floorKey] || []).map((op, i) =>
+                                        i === index
+                                          ? {
+                                              ...op,
+                                              x: (touch.clientX - dragOffsetRef.current.x) / zoom,
+                                              y: (touch.clientY - dragOffsetRef.current.y) / zoom,
+                                            }
+                                          : op
+                                      ),
+                                    }));
+                                  }
+                                }}
+                                onTouchEnd={e => {
+                                  setDraggedOpIndex(null);
+                                  const bin = document.getElementById('operator-bin');
+                                  if (bin && e.changedTouches && e.changedTouches.length > 0) {
+                                    const touch = e.changedTouches[0];
+                                    const binRect = bin.getBoundingClientRect();
+                                    if (
+                                      touch.clientX >= binRect.left &&
+                                      touch.clientX <= binRect.right &&
+                                      touch.clientY >= binRect.top &&
+                                      touch.clientY <= binRect.bottom
+                                    ) {
                                       const floorKey = getCurrentFloorKey();
                                       setPlacedOperatorsByFloor(prev => ({
                                         ...prev,
                                         [floorKey]: (prev[floorKey] || []).filter((_, i) => i !== index)
                                       }));
-                                    }}
-                                    onDragStart={e => {
-                                      setDraggedOpIndex(index);
-                                      dragOffsetRef.current = {
-                                        x: e.clientX - op.x * zoom,
-                                        y: e.clientY - op.y * zoom,
-                                      };
-                                      e.dataTransfer.setData('movingIndex', index);
-                                    }}
-                                    onDragEnd={e => {
-                                      setDraggedOpIndex(null);
-                                      const floorKey = getCurrentFloorKey();
-                                      const rect = e.target.parentElement.getBoundingClientRect();
-                                      const newX = (e.clientX - rect.left) / zoom;
-                                      const newY = (e.clientY - rect.top) / zoom;
-                                      setPlacedOperatorsByFloor(prev => ({
-                                        ...prev,
-                                        [floorKey]: (prev[floorKey] || []).map((op, i) =>
-                                          i === index ? { ...op, x: newX, y: newY } : op
-                                        )
-                                      }));
-                                    }}
-                                    onTouchStart={e => {
-                                      setDraggedOpIndex(index);
-                                      const touch = e.touches[0];
-                                      dragOffsetRef.current = {
-                                        x: touch.clientX - op.x * zoom,
-                                        y: touch.clientY - op.y * zoom,
-                                      };
-                                    }}
-                                    onTouchMove={e => {
-                                      if (draggedOpIndex === index) {
-                                        e.preventDefault();
-                                        const touch = e.touches[0];
+                                    }
+                                  }
+                                }}
+                                onMouseDown={e => {
+                                  e.preventDefault();
+                                  setDraggedOpIndex(index);
+                                  dragOffsetRef.current = {
+                                    x: e.clientX - op.x * zoom,
+                                    y: e.clientY - op.y * zoom,
+                                  };
+
+                                  const handleMouseMove = (moveEvent) => {
+                                    const floorKey = getCurrentFloorKey();
+                                    setPlacedOperatorsByFloor(prev => ({
+                                      ...prev,
+                                      [floorKey]: (prev[floorKey] || []).map((op, i) =>
+                                        i === index
+                                          ? {
+                                              ...op,
+                                              x: (moveEvent.clientX - dragOffsetRef.current.x) / zoom,
+                                              y: (moveEvent.clientY - dragOffsetRef.current.y) / zoom,
+                                            }
+                                          : op
+                                      ),
+                                    }));
+                                  };
+
+                                  const handleMouseUp = (upEvent) => {
+                                    setDraggedOpIndex(null);
+                                    document.removeEventListener('mousemove', handleMouseMove);
+                                    document.removeEventListener('mouseup', handleMouseUp);
+
+                                    // Remove operator if dropped over bin
+                                    const bin = document.getElementById('operator-bin');
+                                    if (bin) {
+                                      const binRect = bin.getBoundingClientRect();
+                                      if (
+                                        upEvent.clientX >= binRect.left &&
+                                        upEvent.clientX <= binRect.right &&
+                                        upEvent.clientY >= binRect.top &&
+                                        upEvent.clientY <= binRect.bottom
+                                      ) {
                                         const floorKey = getCurrentFloorKey();
                                         setPlacedOperatorsByFloor(prev => ({
                                           ...prev,
-                                          [floorKey]: (prev[floorKey] || []).map((op, i) =>
-                                            i === index
-                                              ? {
-                                                  ...op,
-                                                  x: (touch.clientX - dragOffsetRef.current.x) / zoom,
-                                                  y: (touch.clientY - dragOffsetRef.current.y) / zoom,
-                                                }
-                                              : op
-                                          ),
+                                          [floorKey]: (prev[floorKey] || []).filter((_, i) => i !== index)
                                         }));
                                       }
-                                    }}
-                                    onTouchEnd={e => {
-                                      setDraggedOpIndex(null);
-                                      const bin = document.getElementById('operator-bin');
-                                      if (bin && e.changedTouches && e.changedTouches.length > 0) {
-                                        const touch = e.changedTouches[0];
-                                        const binRect = bin.getBoundingClientRect();
-                                        if (
-                                          touch.clientX >= binRect.left &&
-                                          touch.clientX <= binRect.right &&
-                                          touch.clientY >= binRect.top &&
-                                          touch.clientY <= binRect.bottom
-                                        ) {
-                                          const floorKey = getCurrentFloorKey();
-                                          setPlacedOperatorsByFloor(prev => ({
-                                            ...prev,
-                                            [floorKey]: (prev[floorKey] || []).filter((_, i) => i !== index)
-                                          }));
-                                        }
+                                    }
+                                  };
+
+                                  document.addEventListener('mousemove', handleMouseMove);
+                                  document.addEventListener('mouseup', handleMouseUp);
+                                }}
+                              />
+                            ))}
+
+                            {/* Annotation Canvas */}
+                            <canvas
+                              ref={canvasRef}
+                              className="absolute top-0 left-0"
+                              width={mapSize.width * zoom}
+                              height={mapSize.height * zoom}
+                              style={{
+                                width: '100%',
+                                height: '100%',
+                                pointerEvents: 'auto',
+                                zIndex: 10,
+                              }}
+                              onClick={e => {
+                                if (selectedOperatorToPlace) {
+                                  const rect = e.target.getBoundingClientRect();
+                                  const x = (e.clientX - rect.left) / zoom;
+                                  const y = (e.clientY - rect.top) / zoom;
+                                  const floorKey = getCurrentFloorKey();
+                                  setPlacedOperatorsByFloor(prev => ({
+                                    ...prev,
+                                    [floorKey]: [...(prev[floorKey] || []), { ...selectedOperatorToPlace, x, y }]
+                                  }));
+                                  setSelectedOperatorToPlace(null);
+                                }
+                              }}
+                              onDrop={e => {
+                                e.preventDefault();
+                                const rect = e.target.getBoundingClientRect();
+                                const x = (e.clientX - rect.left) / zoom;
+                                const y = (e.clientY - rect.top) / zoom;
+                              
+                                // Handle operator drop (move)
+                                const movingIndex = e.dataTransfer.getData('movingIndex');
+                                if (movingIndex !== '') {
+                                  setPlacedOperatorsByFloor(prev => ({
+                                    ...prev,
+                                    [floorKey]: (prev[floorKey] || []).map((op, i) =>
+                                      i === Number(movingIndex) ? { ...op, x, y } : op
+                                    ),
+                                  }));
+                                  return;
+                                }
+                              
+                                // Handle gadget/ability drop
+                                const gadgetData = e.dataTransfer.getData('gadget');
+                                if (gadgetData) {
+                                  const gadget = JSON.parse(gadgetData);
+                                  setPlacedOperatorsByFloor(prev => ({
+                                    ...prev,
+                                    [floorKey]: [
+                                      ...(prev[floorKey] || []),
+                                      {
+                                        ...gadget,
+                                        x,
+                                        y,
+                                        type: 'gadget'
                                       }
-                                    }}
-                                    onMouseDown={e => {
-                                      e.preventDefault();
-                                      setDraggedOpIndex(index);
-                                      dragOffsetRef.current = {
-                                        x: e.clientX - op.x * zoom,
-                                        y: e.clientY - op.y * zoom,
-                                      };
-
-                                      const handleMouseMove = (moveEvent) => {
-                                        const floorKey = getCurrentFloorKey();
-                                        setPlacedOperatorsByFloor(prev => ({
-                                          ...prev,
-                                          [floorKey]: (prev[floorKey] || []).map((op, i) =>
-                                            i === index
-                                              ? {
-                                                  ...op,
-                                                  x: (moveEvent.clientX - dragOffsetRef.current.x) / zoom,
-                                                  y: (moveEvent.clientY - dragOffsetRef.current.y) / zoom,
-                                                }
-                                              : op
-                                          ),
-                                        }));
-                                      };
-
-                                      const handleMouseUp = (upEvent) => {
-                                        setDraggedOpIndex(null);
-                                        document.removeEventListener('mousemove', handleMouseMove);
-                                        document.removeEventListener('mouseup', handleMouseUp);
-
-                                        // Remove operator if dropped over bin
-                                        const bin = document.getElementById('operator-bin');
-                                        if (bin) {
-                                          const binRect = bin.getBoundingClientRect();
-                                          if (
-                                            upEvent.clientX >= binRect.left &&
-                                            upEvent.clientX <= binRect.right &&
-                                            upEvent.clientY >= binRect.top &&
-                                            upEvent.clientY <= binRect.bottom
-                                          ) {
-                                            const floorKey = getCurrentFloorKey();
-                                            setPlacedOperatorsByFloor(prev => ({
-                                              ...prev,
-                                              [floorKey]: (prev[floorKey] || []).filter((_, i) => i !== index)
-                                            }));
-                                          }
-                                        }
-                                      };
-
-                                      document.addEventListener('mousemove', handleMouseMove);
-                                      document.addEventListener('mouseup', handleMouseUp);
-                                    }}
-                                  />
-                                ))}
-
-                                {/* Annotation Canvas */}
-                                <canvas
-                                  ref={canvasRef}
-                                  className="absolute top-0 left-0 w-full h-full"
-                                  style={{
-                                    width: `${mapSize.width}px`,
-                                    height: `${mapSize.height}px`,
-                                  }}
-                                  onClick={e => {
-                                    if (selectedOperatorToPlace) {
-                                      const rect = e.target.getBoundingClientRect();
-                                      const x = (e.clientX - rect.left) / zoom;
-                                      const y = (e.clientY - rect.top) / zoom;
-                                      const floorKey = getCurrentFloorKey();
-                                      setPlacedOperatorsByFloor(prev => ({
-                                        ...prev,
-                                        [floorKey]: [...(prev[floorKey] || []), { ...selectedOperatorToPlace, x, y }]
-                                      }));
-                                      setSelectedOperatorToPlace(null);
-                                    }
-                                  }}
-                                  onDrop={e => {
-                                    e.preventDefault();
-                                    const rect = e.target.getBoundingClientRect();
-                                    const x = (e.clientX - rect.left) / zoom;
-                                    const y = (e.clientY - rect.top) / zoom;
-                                  
-                                    // Handle operator drop (move)
-                                    const movingIndex = e.dataTransfer.getData('movingIndex');
-                                    if (movingIndex !== '') {
-                                      setPlacedOperatorsByFloor(prev => ({
-                                        ...prev,
-                                        [floorKey]: (prev[floorKey] || []).map((op, i) =>
-                                          i === Number(movingIndex) ? { ...op, x, y } : op
-                                        ),
-                                      }));
-                                      return;
-                                    }
-                                  
-                                    // Handle gadget/ability drop
-                                    const gadgetData = e.dataTransfer.getData('gadget');
-                                    if (gadgetData) {
-                                      const gadget = JSON.parse(gadgetData);
-                                      setPlacedOperatorsByFloor(prev => ({
-                                        ...prev,
-                                        [floorKey]: [
-                                          ...(prev[floorKey] || []),
-                                          {
-                                            ...gadget,
-                                            x,
-                                            y,
-                                            type: 'gadget'
-                                          }
-                                        ]
-                                      }));
-                                      return;
-                                    }
-                                  
-                                    // Handle new operator drop (from sidebar)
-                                    const operatorData = e.dataTransfer.getData('operator');
-                                    if (operatorData) {
-                                      const operator = JSON.parse(operatorData);
-                                      setPlacedOperatorsByFloor(prev => ({
-                                        ...prev,
-                                        [floorKey]: [...(prev[floorKey] || []), { ...operator, x, y }],
-                                      }));
-                                    }
-                                  }}
-                                  onDragOver={e => e.preventDefault()}
-                                  onTouchEnd={e => {
-                                    if (selectedOperatorToPlace) {
-                                      const touch = e.changedTouches[0];
-                                      const rect = e.target.getBoundingClientRect();
-                                      const x = (touch.clientX - rect.left) / zoom;
-                                      const y = (touch.clientY - rect.top) / zoom;
-                                      const floorKey = getCurrentFloorKey();
-                                      setPlacedOperatorsByFloor(prev => ({
-                                        ...prev,
-                                        [floorKey]: [...(prev[floorKey] || []), { ...selectedOperatorToPlace, x, y }]
-                                      }));
-                                      setSelectedOperatorToPlace(null);
-                                    }
-                                  }}
-                                />
-                              </div>
-                            ) : (
-                              <div className="absolute inset-0 flex items-center justify-center w-full h-full text-xl text-gray-500 bg-gray-200/70">
-                                Select a map to view it here.
-                              </div>
-                            )}
+                                    ]
+                                  }));
+                                  return;
+                                }
+                              
+                                // Handle new operator drop (from sidebar)
+                                const operatorData = e.dataTransfer.getData('operator');
+                                if (operatorData) {
+                                  const operator = JSON.parse(operatorData);
+                                  setPlacedOperatorsByFloor(prev => ({
+                                    ...prev,
+                                    [floorKey]: [...(prev[floorKey] || []), { ...operator, x, y }],
+                                  }));
+                                }
+                              }}
+                              onDragOver={e => e.preventDefault()}
+                              onTouchEnd={e => {
+                                if (selectedOperatorToPlace) {
+                                  const touch = e.changedTouches[0];
+                                  const rect = e.target.getBoundingClientRect();
+                                  const x = (touch.clientX - rect.left) / zoom;
+                                  const y = (touch.clientY - rect.top) / zoom;
+                                  const floorKey = getCurrentFloorKey();
+                                  setPlacedOperatorsByFloor(prev => ({
+                                    ...prev,
+                                    [floorKey]: [...(prev[floorKey] || []), { ...selectedOperatorToPlace, x, y }]
+                                  }));
+                                  setSelectedOperatorToPlace(null);
+                                }
+                              }}
+                            />
                           </div>
-                        </div>
+                        ) : selectedMap && !selectedFloor ? (
+                          <div className="absolute inset-0 flex flex-col items-center justify-center w-full h-full bg-gray-200/70">
+                            <img
+                              src={selectedMap.thumbnail}
+                              alt={`${selectedMap.name} thumbnail`}
+                              style={{
+                                maxWidth: '80%',
+                                maxHeight: '80%',
+                                objectFit: 'contain',
+                                borderRadius: '12px',
+                                boxShadow: '0 2px 12px rgba(0,0,0,0.15)',
+                                marginBottom: '1rem',
+                              }}
+                            />
+                            <div className="text-xl text-gray-700 font-semibold mt-2">{selectedMap.name}</div>
+                            <div className="text-base text-gray-500">Select a floor to begin annotating.</div>
+                          </div>
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center w-full h-full text-xl text-gray-500 bg-gray-200/70">
+                            Select a map and floor to view it here.
+                          </div>
+                        )}
                       </div>
                   </div>       
                   <div className={`flex ${toolLayout === 'vertical' ? 'flex-row ' : 'flex-col items-center justify-center'} gap-6`}>
