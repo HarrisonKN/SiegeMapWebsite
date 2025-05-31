@@ -66,6 +66,19 @@ const ForumPage = ({handleLoadSetup}) => {
               {setup.username && (
                 <p className="text-gray-500 text-xs mt-2">Posted by: {setup.username}</p>
               )}
+              {setup.created_at && (() => {
+                const d = new Date(setup.created_at);
+                const day = String(d.getDate()).padStart(2, '0');
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const year = d.getFullYear();
+                const hours = String(d.getHours()).padStart(2, '0');
+                const minutes = String(d.getMinutes()).padStart(2, '0');
+                return (
+                  <p className="text-gray-500 text-xs mt-2">
+                    {`${day}/${month}/${year} ${hours}:${minutes}`}
+                  </p>
+                );
+              })()}
             </div>
           </div>
         ))}

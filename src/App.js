@@ -28,7 +28,8 @@ const App = () => {
   const [showSettings, setShowSettings] = useState(false);
   const settingsRef = useRef(null);
   const [setSelectedOperator] = useState(null);
-  const [placedOperators, setPlacedOperators] = useState([]);
+  const [placedOperatorsByFloor, setPlacedOperatorsByFloor] = useState({});
+  const [showAllOperators, setShowAllOperators] = useState(false);
   const [mapSize, setMapSize] = useState({ width: 0, height: 0 });
   const [floorAnnotations, setFloorAnnotations] = useState({});
   const [showModal, setShowModal] = useState(false);
@@ -73,11 +74,11 @@ const App = () => {
   
     // Set placed operators (support both .operators and .data.operators for compatibility)
     if (setup.operators) {
-      setPlacedOperators(setup.operators);
+      setPlacedOperatorsByFloor(setup.operators);
     } else if (setup.data && setup.data.operators) {
-      setPlacedOperators(setup.data.operators);
+      setPlacedOperatorsByFloor(setup.data.operators);
     } else {
-      setPlacedOperators([]);
+      setPlacedOperatorsByFloor({});
     }
   
     // Optionally navigate to main view if not already there
@@ -97,7 +98,7 @@ const App = () => {
     const mapName = selectedMap?.name || 'map';
     const floorName = selectedFloor?.name || 'floor';
     const title = prompt("Enter a title for this setup:") || "Untitled";
-    const error = await saveSetupToAccount({ mapName, floorName, title, setupData, operators: placedOperators });
+    const error = await saveSetupToAccount({ mapName, floorName, title, setupData, operators: placedOperatorsByFloor });
     if (!error) {
       alert("Setup saved to your account!");
       setShowModal(false);
@@ -191,7 +192,9 @@ const App = () => {
       });
   
       // 4. Draw all operator images
-      const operatorPromises = placedOperators.map((op) => {
+      const floorKey = getCurrentFloorKey();
+      const operators = placedOperatorsByFloor[floorKey] || [];
+      const operatorPromises = operators.map((op) => {
         return new Promise((resolve) => {
           const operatorImage = new Image();
           operatorImage.crossOrigin = 'anonymous';
@@ -281,27 +284,34 @@ const App = () => {
     }, 0);
   };
 
-  // Handle operator placement onto the screen
   const handleDrop = (e) => {
     e.preventDefault();
     const rect = e.target.getBoundingClientRect();
-    // Normalize drop position by zoom
     const x = (e.clientX - rect.left) / zoom;
     const y = (e.clientY - rect.top) / zoom;
-  
+    const floorKey = getCurrentFloorKey();
+    if (!floorKey) return;
+
+    // Handle moving an existing operator
     const movingIndex = e.dataTransfer.getData('movingIndex');
     if (movingIndex !== '') {
-      setPlacedOperators((prev) => {
-        const updated = [...prev];
-        updated[movingIndex] = { ...updated[movingIndex], x, y };
-        return updated;
-      });
+      setPlacedOperatorsByFloor(prev => ({
+        ...prev,
+        [floorKey]: (prev[floorKey] || []).map((op, i) =>
+          i === Number(movingIndex) ? { ...op, x, y } : op
+        ),
+      }));
       return;
     }
+
+    // Handle placing a new operator
     const data = e.dataTransfer.getData('operator');
     if (data) {
       const operator = JSON.parse(data);
-      setPlacedOperators((prev) => [...prev, { ...operator, x, y }]);
+      setPlacedOperatorsByFloor(prev => ({
+        ...prev,
+        [floorKey]: [...(prev[floorKey] || []), { ...operator, x, y }],
+      }));
     }
   };
 
@@ -310,7 +320,7 @@ const App = () => {
     if (!selectedMap || !selectedFloor) return null;
     return `${selectedMap.id}_${selectedFloor.name}`;
   };
-  
+
   // Save the annotation to the current floor
   const saveAnnotationToFloor = (annotation) => {
     const floorKey = getCurrentFloorKey();
@@ -338,6 +348,22 @@ const App = () => {
     if (window.innerWidth < 640) {
       setIsOperatorSidebarOpen(false);
     }
+  };
+
+  const floorKey = getCurrentFloorKey();
+  const operatorsToShow = showAllOperators
+    ? Object.values(placedOperatorsByFloor).flat()
+    : placedOperatorsByFloor[floorKey] || [];
+
+  // Handle operator placement via canvas click/touch
+  const handleOperatorPlace = (x, y) => {
+    if (!selectedOperatorToPlace) return;
+    const floorKey = getCurrentFloorKey();
+    setPlacedOperatorsByFloor(prev => ({
+      ...prev,
+      [floorKey]: [...(prev[floorKey] || []), { ...selectedOperatorToPlace, x, y }]
+    }));
+    setSelectedOperatorToPlace(null);
   };
 
 
@@ -863,9 +889,20 @@ const App = () => {
         customOnClick={clearCurrentFloorAnnotations}
         tooltip="Clear all annotations on the current floor"
       />
+      <div className="flex flex-col items-center gap-2 mt-2">
       <button
-        className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow"
-        onClick={() => setShowModal(true)}>Save Setup</button>
+        className="bg-blue-500 text-white px-2 py-1 rounded min-w-[140px]"
+        onClick={() => setShowAllOperators(v => !v)}
+      >
+        {showAllOperators ? "Show This Floor's Operators" : "Show All Operators"}
+      </button>
+      <button
+        className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow min-w-[140px]"
+        onClick={() => setShowModal(true)}
+      >
+        Save Setup
+      </button>
+    </div>
 
         {showModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -887,11 +924,14 @@ const App = () => {
         )}
       
       <div className="flex flex-col items-center ml-2">
-        <span className="text-xs text-gray-700 font-semibold mb-1">Zoom:{Math.round(zoom * 100)}%</span>
         <div className={`flex gap-1 ${toolLayout === 'vertical' ? 'flex-col' : 'flex-row'}`}>
           <ZoomButton label="Zoom In" icon="fas fa-search-plus" onClick={() => setZoom(prev => Math.min(prev + 0.1, 3))} />
+          <div>
+            <span className="w-full text-center font-bold text-xs sm:text-base mb-1">Zoom:{Math.round(zoom * 100)}%</span>
+            <ZoomButton label="Reset" icon="fas fa-compress" onClick={() => setZoom(1)} />
+          </div>
           <ZoomButton label="Zoom Out" icon="fas fa-search-minus" onClick={() => setZoom(prev => Math.max(prev - 0.1, 0.5))} />
-          <ZoomButton label="Reset" icon="fas fa-compress" onClick={() => setZoom(1)} />
+
         </div>
       </div>
       <div
@@ -906,6 +946,18 @@ const App = () => {
       </div>  
     </>
   );
+  const ZoomButton = ({ label, icon, onClick, small = false }) => (
+    <div
+      className={`rounded-lg text-center cursor-pointer hover:bg-gray-400 bg-gray-300
+        ${small ? 'p-1 min-w-[32px] sm:min-w-[40px]' : 'p-1 sm:p-4 min-w-[40px] sm:min-w-[80px]'}
+        flex flex-col items-center`}
+      style={{ fontSize: small ? '0.7rem' : '0.75rem' }}
+      onClick={onClick}
+    >
+      <i className={`${icon} ${small ? 'text-base sm:text-lg' : 'text-base sm:text-2xl'}`}></i>
+      <p className={`font-semibold ${small ? 'text-[9px] sm:text-xs' : 'text-[10px] sm:text-sm'} mt-0.5`}>{label}</p>
+    </div>
+  );
 
   const handleFloorSelect = (floor) => {
     setSelectedFloor(floor);
@@ -917,18 +969,6 @@ const App = () => {
       }
     }, 0);
   };
-
-  const ZoomButton = ({ label, icon, onClick }) => (
-    <div
-      className="p-1 sm:p-2 rounded text-center cursor-pointer hover:bg-gray-400 bg-gray-200 min-w-[28px] sm:min-w-[48px]"
-      style={{ fontSize: '0.75rem' }}
-      onClick={onClick}
-    >
-      <i className={`${icon} text-xs sm:text-lg`}></i>
-      <p className="font-semibold text-[9px] sm:text-xs mt-0.5">{label}</p>
-    </div>
-  );
-
 
   const Tooltip = ({ text, children }) => {
     const [show, setShow] = useState(false);
@@ -997,8 +1037,11 @@ const App = () => {
     </Tooltip>
   );
 
+
+
+
   return (
-<div className="flex flex-col h-[100dvh]">
+  <div className="flex flex-col h-[100dvh]">
 
       {/* Header */}
       <div className="bg-gray-800 text-white p-4 flex flex-col sm:flex-row justify-between items-center relative">
@@ -1015,7 +1058,7 @@ const App = () => {
               setSelectedMap(null);
               setSelectedFloor(null);
               setFloorAnnotations({});
-              setPlacedOperators([]);
+              setPlacedOperatorsByFloor({});
             }}
           >
             Home
@@ -1088,7 +1131,7 @@ const App = () => {
                 setSelectedMap(null);
                 setSelectedFloor(null);
                 setFloorAnnotations({});
-                setPlacedOperators([]);
+                setPlacedOperatorsByFloor({});
                 setMobileMenuOpen(false);
               }}
             >
@@ -1253,13 +1296,13 @@ const App = () => {
                         {selectedMap && (
                           <>
                             {/* LEFT BOX: Placed Attackers */}
-                            {placedOperators.some(op => op.role === 'Attacker') && (
+                            {Object.values(placedOperatorsByFloor).flat().some(op => op.role === 'Attacker') && (
                               <div className="hidden sm:flex flex-col absolute top-4 left-4 z-40 bg-white/90 p-2 rounded shadow min-w-[140px] max-w-[180px]">
                                 <div className="font-bold mb-2 text-blue-900">Attackers</div>
-                                {placedOperators.filter(op => op.role === 'Attacker').length === 0 && (
+                                {Object.values(placedOperatorsByFloor).flat().filter(op => op.role === 'Attacker').length === 0 && (
                                   <div className="text-gray-500 text-xs">None</div>
                                 )}
-                                {placedOperators.filter(op => op.role === 'Attacker').map((op, idx) => (
+                                {Object.values(placedOperatorsByFloor).flat().filter(op => op.role === 'Attacker').map((op, idx) => (
                                   <div key={idx} className="mb-2 border-b pb-1">
                                     <div className="font-semibold">{op.name}</div>
                                     {/* Unique Ability */}
@@ -1305,13 +1348,13 @@ const App = () => {
                             )}
 
                             {/* RIGHT BOX: Placed Defenders */}
-                            {placedOperators.some(op => op.role === 'Defender') && (
-                            <div className="hidden sm:flex flex-col absolute top-4 right-4 z-40 bg-white/90 p-2 rounded shadow min-w-[140px] max-w-[180px]">
-                              <div className="font-bold mb-2 text-blue-900">Defenders</div>
-                              {placedOperators.filter(op => op.role === 'Defender').length === 0 && (
-                                <div className="text-gray-500 text-xs">None</div>
-                              )}
-                              {placedOperators.filter(op => op.role === 'Defender').map((op, idx) => (
+                            {Object.values(placedOperatorsByFloor).flat().some(op => op.role === 'Defender') && (
+                              <div className="hidden sm:flex flex-col absolute top-4 right-4 z-40 bg-white/90 p-2 rounded shadow min-w-[140px] max-w-[180px]">
+                                <div className="font-bold mb-2 text-blue-900">Defenders</div>
+                                {Object.values(placedOperatorsByFloor).flat().filter(op => op.role === 'Defender').length === 0 && (
+                                  <div className="text-gray-500 text-xs">None</div>
+                                )}
+                                {Object.values(placedOperatorsByFloor).flat().filter(op => op.role === 'Defender').map((op, idx) => (
                                 <div key={idx} className="mb-2 border-b pb-1">
                                   <div className="font-semibold">{op.name}</div>
                                   {/* Unique Ability */}
@@ -1399,7 +1442,7 @@ const App = () => {
                                 />
 
                                 {/* Placed Operators */}
-                                {placedOperators.map((op, index) => (
+                                {operatorsToShow.map((op, index) => (
                                   <img
                                     key={index}
                                     src={op.image}
@@ -1410,38 +1453,40 @@ const App = () => {
                                       top: `${op.y}px`,
                                       left: `${op.x}px`,
                                       transform: `scale(${1 / zoom})`,
-                                      touchAction: 'none', // Prevents default scrolling while dragging
-                                      borderColor: op.role === 'Attacker' ? '#2563eb' : '#f59e42', // Blue for Attacker, Orange for Defender
+                                      touchAction: 'none',
+                                      borderColor: op.role === 'Attacker' ? '#2563eb' : '#f59e42',
                                       borderStyle: 'solid',
                                       borderWidth: '3px',
                                       background: '#fff',
-                                    }}                              
-                                    onContextMenu={(e) => {
-                                      e.preventDefault();
-                                      setPlacedOperators((prev) => prev.filter((_, i) => i !== index));
                                     }}
-                                    // --- Touch support ---
+                                    onContextMenu={e => {
+                                      e.preventDefault();
+                                      const floorKey = getCurrentFloorKey();
+                                      setPlacedOperatorsByFloor(prev => ({
+                                        ...prev,
+                                        [floorKey]: (prev[floorKey] || []).filter((_, i) => i !== index)
+                                      }));
+                                    }}
                                     onDragStart={e => {
                                       setDraggedOpIndex(index);
                                       dragOffsetRef.current = {
                                         x: e.clientX - op.x * zoom,
                                         y: e.clientY - op.y * zoom,
                                       };
+                                      e.dataTransfer.setData('movingIndex', index);
                                     }}
                                     onDragEnd={e => {
                                       setDraggedOpIndex(null);
-                                      const bin = document.getElementById('operator-bin');
-                                      if (bin) {
-                                        const binRect = bin.getBoundingClientRect();
-                                        if (
-                                          e.clientX >= binRect.left &&
-                                          e.clientX <= binRect.right &&
-                                          e.clientY >= binRect.top &&
-                                          e.clientY <= binRect.bottom
-                                        ) {
-                                          setPlacedOperators(prev => prev.filter((_, i) => i !== index));
-                                        }
-                                      }
+                                      const floorKey = getCurrentFloorKey();
+                                      const rect = e.target.parentElement.getBoundingClientRect();
+                                      const newX = (e.clientX - rect.left) / zoom;
+                                      const newY = (e.clientY - rect.top) / zoom;
+                                      setPlacedOperatorsByFloor(prev => ({
+                                        ...prev,
+                                        [floorKey]: (prev[floorKey] || []).map((op, i) =>
+                                          i === index ? { ...op, x: newX, y: newY } : op
+                                        )
+                                      }));
                                     }}
                                     onTouchStart={e => {
                                       setDraggedOpIndex(index);
@@ -1455,15 +1500,19 @@ const App = () => {
                                       if (draggedOpIndex === index) {
                                         e.preventDefault();
                                         const touch = e.touches[0];
-                                        setPlacedOperators(prev => {
-                                          const updated = [...prev];
-                                          updated[index] = {
-                                            ...updated[index],
-                                            x: (touch.clientX - dragOffsetRef.current.x) / zoom,
-                                            y: (touch.clientY - dragOffsetRef.current.y) / zoom,
-                                          };
-                                          return updated;
-                                        });
+                                        const floorKey = getCurrentFloorKey();
+                                        setPlacedOperatorsByFloor(prev => ({
+                                          ...prev,
+                                          [floorKey]: (prev[floorKey] || []).map((op, i) =>
+                                            i === index
+                                              ? {
+                                                  ...op,
+                                                  x: (touch.clientX - dragOffsetRef.current.x) / zoom,
+                                                  y: (touch.clientY - dragOffsetRef.current.y) / zoom,
+                                                }
+                                              : op
+                                          ),
+                                        }));
                                       }
                                     }}
                                     onTouchEnd={e => {
@@ -1478,11 +1527,14 @@ const App = () => {
                                           touch.clientY >= binRect.top &&
                                           touch.clientY <= binRect.bottom
                                         ) {
-                                          setPlacedOperators(prev => prev.filter((_, i) => i !== index));
+                                          const floorKey = getCurrentFloorKey();
+                                          setPlacedOperatorsByFloor(prev => ({
+                                            ...prev,
+                                            [floorKey]: (prev[floorKey] || []).filter((_, i) => i !== index)
+                                          }));
                                         }
                                       }
                                     }}
-
                                     onMouseDown={e => {
                                       e.preventDefault();
                                       setDraggedOpIndex(index);
@@ -1490,24 +1542,28 @@ const App = () => {
                                         x: e.clientX - op.x * zoom,
                                         y: e.clientY - op.y * zoom,
                                       };
-                                    
+
                                       const handleMouseMove = (moveEvent) => {
-                                        setPlacedOperators(prev => {
-                                          const updated = [...prev];
-                                          updated[index] = {
-                                            ...updated[index],
-                                            x: (moveEvent.clientX - dragOffsetRef.current.x) / zoom,
-                                            y: (moveEvent.clientY - dragOffsetRef.current.y) / zoom,
-                                          };
-                                          return updated;
-                                        });
+                                        const floorKey = getCurrentFloorKey();
+                                        setPlacedOperatorsByFloor(prev => ({
+                                          ...prev,
+                                          [floorKey]: (prev[floorKey] || []).map((op, i) =>
+                                            i === index
+                                              ? {
+                                                  ...op,
+                                                  x: (moveEvent.clientX - dragOffsetRef.current.x) / zoom,
+                                                  y: (moveEvent.clientY - dragOffsetRef.current.y) / zoom,
+                                                }
+                                              : op
+                                          ),
+                                        }));
                                       };
-                                    
+
                                       const handleMouseUp = (upEvent) => {
                                         setDraggedOpIndex(null);
                                         document.removeEventListener('mousemove', handleMouseMove);
                                         document.removeEventListener('mouseup', handleMouseUp);
-                                    
+
                                         // Remove operator if dropped over bin
                                         const bin = document.getElementById('operator-bin');
                                         if (bin) {
@@ -1518,11 +1574,15 @@ const App = () => {
                                             upEvent.clientY >= binRect.top &&
                                             upEvent.clientY <= binRect.bottom
                                           ) {
-                                            setPlacedOperators(prev => prev.filter((_, i) => i !== index));
+                                            const floorKey = getCurrentFloorKey();
+                                            setPlacedOperatorsByFloor(prev => ({
+                                              ...prev,
+                                              [floorKey]: (prev[floorKey] || []).filter((_, i) => i !== index)
+                                            }));
                                           }
                                         }
                                       };
-                                    
+
                                       document.addEventListener('mousemove', handleMouseMove);
                                       document.addEventListener('mouseup', handleMouseUp);
                                     }}
@@ -1542,7 +1602,11 @@ const App = () => {
                                       const rect = e.target.getBoundingClientRect();
                                       const x = (e.clientX - rect.left) / zoom;
                                       const y = (e.clientY - rect.top) / zoom;
-                                      setPlacedOperators(prev => [...prev, { ...selectedOperatorToPlace, x, y }]);
+                                      const floorKey = getCurrentFloorKey();
+                                      setPlacedOperatorsByFloor(prev => ({
+                                        ...prev,
+                                        [floorKey]: [...(prev[floorKey] || []), { ...selectedOperatorToPlace, x, y }]
+                                      }));
                                       setSelectedOperatorToPlace(null);
                                     }
                                   }}
@@ -1551,29 +1615,46 @@ const App = () => {
                                     const rect = e.target.getBoundingClientRect();
                                     const x = (e.clientX - rect.left) / zoom;
                                     const y = (e.clientY - rect.top) / zoom;
-
-                                    // Handle operator drop
-                                    if (draggingOperator) {
-                                      setPlacedOperators(prev => [...prev, { ...draggingOperator, x, y }]);
-                                      setDraggingOperator(null);
+                                  
+                                    // Handle operator drop (move)
+                                    const movingIndex = e.dataTransfer.getData('movingIndex');
+                                    if (movingIndex !== '') {
+                                      setPlacedOperatorsByFloor(prev => ({
+                                        ...prev,
+                                        [floorKey]: (prev[floorKey] || []).map((op, i) =>
+                                          i === Number(movingIndex) ? { ...op, x, y } : op
+                                        ),
+                                      }));
                                       return;
                                     }
-
+                                  
                                     // Handle gadget/ability drop
                                     const gadgetData = e.dataTransfer.getData('gadget');
                                     if (gadgetData) {
                                       const gadget = JSON.parse(gadgetData);
-                                      // You can push this to a new array, or add to placedOperators, or manage as you wish
-                                      // Example: add to placedOperators as a "gadget" type
-                                      setPlacedOperators(prev => [
+                                      setPlacedOperatorsByFloor(prev => ({
                                         ...prev,
-                                        {
-                                          ...gadget,
-                                          x,
-                                          y,
-                                          type: 'gadget'
-                                        }
-                                      ]);
+                                        [floorKey]: [
+                                          ...(prev[floorKey] || []),
+                                          {
+                                            ...gadget,
+                                            x,
+                                            y,
+                                            type: 'gadget'
+                                          }
+                                        ]
+                                      }));
+                                      return;
+                                    }
+                                  
+                                    // Handle new operator drop (from sidebar)
+                                    const operatorData = e.dataTransfer.getData('operator');
+                                    if (operatorData) {
+                                      const operator = JSON.parse(operatorData);
+                                      setPlacedOperatorsByFloor(prev => ({
+                                        ...prev,
+                                        [floorKey]: [...(prev[floorKey] || []), { ...operator, x, y }],
+                                      }));
                                     }
                                   }}
                                   onDragOver={e => e.preventDefault()}
@@ -1583,7 +1664,11 @@ const App = () => {
                                       const rect = e.target.getBoundingClientRect();
                                       const x = (touch.clientX - rect.left) / zoom;
                                       const y = (touch.clientY - rect.top) / zoom;
-                                      setPlacedOperators(prev => [...prev, { ...selectedOperatorToPlace, x, y }]);
+                                      const floorKey = getCurrentFloorKey();
+                                      setPlacedOperatorsByFloor(prev => ({
+                                        ...prev,
+                                        [floorKey]: [...(prev[floorKey] || []), { ...selectedOperatorToPlace, x, y }]
+                                      }));
                                       setSelectedOperatorToPlace(null);
                                     }
                                   }}
@@ -1597,8 +1682,7 @@ const App = () => {
                           </div>
                         </div>
                       </div>
-                  </div>
-
+                  </div>       
                   <div className={`flex ${toolLayout === 'vertical' ? 'flex-row ' : 'flex-col items-center justify-center'} gap-6`}>
                     {/* Tool Buttons */}
                     <div className={toolLayout === 'vertical' ? "flex flex-col gap-2 w-28 shrink-0 overflow-y-auto" : "flex flex-wrap gap-2 w-full items-center justify-center"}>
@@ -1622,9 +1706,9 @@ const App = () => {
                   <div className="bg-gray-800 text-white w-full sm:w-64 p-4 h-full">
                   <OperatorSidebar
                     operators={OperatorData}
-                    onClearOperators={() => setPlacedOperators([])}
+                    onClearOperators={() => setPlacedOperatorsByFloor({})}
                     zoom={zoom}
-                    setPlacedOperators={setPlacedOperators}
+                    setPlacedOperatorsByFloor={setPlacedOperatorsByFloor}
                     setDraggingOperator={setDraggingOperator}
                     setDraggingTouch={setDraggingTouch}
                     selectedOperatorToPlace={selectedOperatorToPlace}
