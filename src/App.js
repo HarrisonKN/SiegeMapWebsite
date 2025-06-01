@@ -11,6 +11,8 @@ import AuthPage from './components/UserLoginRegPage';
 import { supabase } from './supabaseClient';
 import { useUser } from './context/UserContext';
 import ResetPasswordPage from './components/ResetPasswordPage';
+import SubmitChangesPage from './components/SubmitChangesPage';
+import SettingsPage from './components/SettingsPage';
 
 import './styles.css';
 
@@ -1174,12 +1176,14 @@ const App = () => {
             </Link>
           )}
           <div className="relative flex items-center justify-center min-w-[120px]">
-            <button
-              className="w-full bg-gray-600 px-2 sm:px-4 py-2 rounded text-sm sm:text-base hover:bg-gray-500 active:bg-gray-700 transition duration-150 text-center"
-              onClick={() => setShowSettings(!showSettings)}
+            <Link
+              to="/settingsPage"
+              className="w-full bg-gray-600 px-2 sm:px-4 py-2 rounded text-sm sm:text-base hover:bg-gray-500 active:bg-gray-700 transition duration-150 text-center flex items-center justify-center"
+              onClick={() => setShowSettings(false)}
             >
               Settings
-            </button>
+            </Link>
+
             {showSettings && (
               <div 
                 ref={settingsRef}
@@ -1889,6 +1893,8 @@ const App = () => {
           <Route path="/UserAccount" element={<UserAccountPage handleLoadSetup={handleLoadSetup}/>} />
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/settingsPage" element={<SettingsPage />} />
+          <Route path="/suggest-changes" element={<SubmitChangesPage />} />
         </Routes>
       </div>
     </div>
