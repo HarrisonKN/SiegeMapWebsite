@@ -398,8 +398,12 @@ const App = () => {
     let lastTouch = { x: 0, y: 0 };
   
     const onTouchStart = (e) => {
-      // Only allow panning if Mouse tool is active (or no tool)
-      if ((currentTool === null || currentTool === "mouse") && e.touches.length === 1) {
+      // Only allow panning if Mouse tool is active (or no tool) and NOT dragging an operator
+      if (
+        (currentTool === null || currentTool === "mouse") &&
+        e.touches.length === 1 &&
+        draggedOpIndex === null
+      ) {
         isTouching = true;
         lastTouch = {
           x: e.touches[0].clientX,
@@ -435,7 +439,7 @@ const App = () => {
       container.removeEventListener('touchmove', onTouchMove);
       container.removeEventListener('touchend', onTouchEnd);
     };
-  }, [currentTool]);
+  }, [currentTool, draggedOpIndex]);
 
   // Add mouse-based panning to the scroll container
   useEffect(() => {

@@ -6,27 +6,10 @@ ITEMS TO FIX
 Maybe see if you can access the maps from the game files to use, so that you can
 show the sites instead of the floor
 
-
-I think i want to adjust how the scrolling, zoomng and panning works,
-I would like to have it so that, using the scroll wheel just zooms in and out?
-then holding a ctrl + scroll would move the map up and down
-holding shift + scroll would move the map sideways
-
-
-MAP STILL DOESNT FUCKING MOVE ON MOBILE DEVICES
-
-Still the map viewer functionality not great, the scrolling and zooming is not very good and maybe
-should add just dragging with the mouse to move the map around
-
-
-
+Add a button to adjust operators sizes for mobile devices, so that they can be larger and easier to use
 
 ---------------------------------------------------------------------------------------------------------------
 FUTURE IDEAS
-
-When switching tools, after clicking on each tool, have a description box 
-show up with a quick explanation on how the tool works and the behaviours 
-that can be expected (DONE)
 
 need to add gadgets and things menu for each operator
 this includes an area for each character used
@@ -45,4 +28,4 @@ Global market??? of site setups that anyone can view and save (DONE)
 ---------------------------------------------------------------------------------------------------------------
 BEHAVIOURS
 Annotations stay on the floor they are drawn on even after switching to a new map, 
-I think this is a good thing, just noting behaviours
+I think this is a good thing
