@@ -1016,7 +1016,7 @@ const App = () => {
         <div className={`flex gap-1 ${toolLayout === 'vertical' ? 'flex-col' : 'flex-row'}`}>
           <ZoomButton label="Zoom In" icon="fas fa-search-plus" onClick={() => setZoom(prev => Math.min(prev + 0.2, 5))} />
           <div>
-            <span className="w-full text-center font-bold text-xs sm:text-base mb-1">Zoom:{Math.round(zoom * 100)}%</span>
+            <span className="w-full text-center font-bold text-[10px] sm:text-xs mb-1">Zoom: {Math.round(zoom * 100)}%</span>
             <ZoomButton label="Reset" icon="fas fa-compress" onClick={() => setZoom(1)} />
           </div>
           <ZoomButton label="Zoom Out" icon="fas fa-search-minus" onClick={() => setZoom(prev => Math.max(prev - 0.2, 0.2))} />
@@ -1035,18 +1035,18 @@ const App = () => {
       </div>  
     </>
   );
-  const ZoomButton = ({ label, icon, onClick, small = false }) => (
-    <div
-      className={`rounded-lg text-center cursor-pointer hover:bg-gray-400 bg-gray-300
-        ${small ? 'p-1 min-w-[32px] sm:min-w-[40px]' : 'p-1 sm:p-4 min-w-[40px] sm:min-w-[80px]'}
-        flex flex-col items-center`}
-      style={{ fontSize: small ? '0.7rem' : '0.75rem' }}
-      onClick={onClick}
-    >
-      <i className={`${icon} ${small ? 'text-base sm:text-lg' : 'text-base sm:text-2xl'}`}></i>
-      <p className={`font-semibold ${small ? 'text-[9px] sm:text-xs' : 'text-[10px] sm:text-sm'} mt-0.5`}>{label}</p>
-    </div>
-  );
+  
+  const ZoomButton = ({ label, icon, onClick }) => (
+  <div
+    className="rounded text-center cursor-pointer hover:bg-gray-400 bg-gray-300 p-1 min-w-[28px] flex flex-col items-center"
+    style={{ fontSize: '0.7rem', maxWidth: 90 }}
+    onClick={onClick}
+  >
+    <i className={`${icon} text-[25px]`}></i>
+    <p className="font-semibold text-[8px] mt-0.5">{label}</p>
+  </div>
+);
+  
 
   const handleFloorSelect = (floor) => {
     setSelectedFloor(floor);
@@ -1110,24 +1110,31 @@ const App = () => {
   };
 
   const ToolButton = ({ label, icon, current, setCurrent, customOnClick = null, tooltip }) => (
-    <Tooltip text={tooltip}>
-      <div
-        className={`p-1 sm:p-4 rounded-lg text-center cursor-pointer hover:bg-gray-400 
-          ${current === label.toLowerCase() ? 'bg-blue-500' : 'bg-gray-300'}
-          min-w-[40px] sm:min-w-[80px]`}
-        onClick={() => {
-          if (customOnClick) {
-            customOnClick();
-          } else {
-            setCurrent(label.toLowerCase());
-          }
-        }}
-      >
-        <i className={`${icon} text-base sm:text-2xl`}></i>
-        <p className="font-semibold text-[10px] sm:text-sm mt-0.5">{label}</p>
-      </div>
-    </Tooltip>
-  );
+  <Tooltip text={tooltip}>
+    <div
+      className={`p-1 sm:p-2 rounded text-center cursor-pointer hover:bg-gray-400 
+        ${current === label.toLowerCase() ? 'bg-blue-500' : 'bg-gray-300'}
+        min-w-[32px] sm:min-w-[48px] flex flex-col items-center`}
+      style={{ maxWidth: 60 }}
+      onClick={() => {
+        if (customOnClick) {
+          customOnClick();
+        } else {
+          setCurrent(label.toLowerCase());
+        }
+      }}
+    >
+      <i className={`${icon} text-xs sm:text-base`}></i>
+      <p className="font-semibold text-[9px] sm:text-xs mt-0.5">{label}</p>
+    </div>
+  </Tooltip>
+);
+
+<div className={toolLayout === 'vertical'
+    ? "flex flex-col gap-1 w-20 shrink-0 overflow-y-auto"
+    : "flex flex-wrap gap-1 w-full items-center justify-center"}>
+    {renderToolButtons()}
+</div>
 
 
 
@@ -1183,8 +1190,8 @@ const App = () => {
             >
               Settings
             </Link>
-
-            {showSettings && (
+            
+            {/* {showSettings && (
               <div 
                 ref={settingsRef}
                 className="absolute right-0 mt-2 bg-white text-black shadow-lg rounded p-4 z-10 w-48">
@@ -1201,7 +1208,7 @@ const App = () => {
                   <option value="vertical">Vertical</option>
                 </select>
               </div>
-            )}
+            )} */}
           </div>
         </div>
         {/* Mobile Menu Button */}

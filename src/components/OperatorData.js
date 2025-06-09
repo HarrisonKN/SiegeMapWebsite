@@ -3,50 +3,60 @@ const OperatorData = [
     name: 'Rauora',
     role: 'Attacker',
     image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/T2BrSyMgBBSjM7rs8T53b/0f8d6842d4440fc06d450789c273381b/r6s-operators-badge-rauora.png',
-    uniqueAbility: { name: 'DICK LAUNCHER', quantity: 1 },
+    uniqueAbility: { name: 'D.O.M. Panel Launcher', quantity: 1 },
     secondaryGadgets: [
-      { name: 'DICK DUCK', quantity: 1 },
-      { name: 'QUACKINATOR', quantity: 2 }
+      { name: 'Smoke Grenade', quantity: 2 },
+      { name: 'Breach Charge', quantity: 2 }
     ]
   },
   {
     name: 'Skopós',
     role: 'Defender',
     image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/k0AOat3ISkt7WMR6X4dJg/aa4596095d3861f7de24e007730e3f89/r6s-operators-badge-skopos.png',
-    uniqueAbility: { name: 'placeholder', quantity: 0 },
+    uniqueAbility: { name: 'V10 Pantheon Shells', quantity: 1 },
     secondaryGadgets: [
-      { name: 'placeholder', quantity: 0 },
-      { name: 'placeholder', quantity: 0 }
+      { name: 'Impact Grenade', quantity: 2 },
+      { name: 'Proximity Alarm', quantity: 3 }
     ]
   },
   {
     name: 'Sentry',
     role: 'Defender',
     image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/3RhB8rT969t71r0b3iiiQo/3bf85d17ade85b4e5943712b664b6166/r6s-operators-badge-sentry.png',
-    uniqueAbility: { name: 'placeholder', quantity: 0 },
+    uniqueAbility: { name: 'Gadget Kit', quantity: 1 },
     secondaryGadgets: [
-      { name: 'placeholder', quantity: 0 },
-      { name: 'placeholder', quantity: 0 }
+      { name: 'Barbed Wire', quantity: 2 },
+      { name: 'Bulletproof Camera', quantity: 1 },
+      { name: 'Deployable Shield', quantity: 1 },
+      { name: 'Observation Blocker', quantity: 3 },
+      { name: 'Impact Grenade', quantity: 2 },
+      { name: 'Proximity Alarm', quantity: 3 },
+      { name: 'Nitro Cell', quantity: 2 }
     ]
   },
   {
     name: 'Striker',
     role: 'Attacker',
     image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/2ZC6qMkmnam9bLc1fZJJ0C/fd0719a5b03789e65aa7f41e7c2dc49c/r6s-operators-badge-striker.png',
-    uniqueAbility: { name: 'placeholder', quantity: 0 },
+    uniqueAbility: { name: 'Gadget Kit', quantity: 1 },
     secondaryGadgets: [
-      { name: 'placeholder', quantity: 0 },
-      { name: 'placeholder', quantity: 0 }
+      { name: 'Breach Charge', quantity: 2},
+      { name: 'Claymore', quantity: 2 },
+      { name: 'Frag Grenade', quantity: 2 },
+      { name: 'Hard Breach Charge', quantity: 2 },
+      { name: 'Smoke Grenade', quantity: 2 },
+      { name: 'Stun Grenade', quantity: 2 },
+      { name: 'Impact EMP Grenade', quantity: 2 }
     ]
   },
   {
     name: 'Deimos',
     role: 'Attacker',
     image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/18uYWtYnEjmMQBTTdkIfWF/ba8c07729ff3c6de5872ffbcdc7956fb/r6s-operators-badge-deimos.png',
-    uniqueAbility: { name: 'placeholder', quantity: 0 },
+    uniqueAbility: { name: 'Deathmark Tracker', quantity: 1 },
     secondaryGadgets: [
-      { name: 'placeholder', quantity: 0 },
-      { name: 'placeholder', quantity: 0 }
+      { name: 'Frag Grenade', quantity: 2 },
+      { name: 'Hard Breach Charge', quantity: 2 }
     ]
   },
   {
@@ -63,10 +73,10 @@ const OperatorData = [
     name: 'Ram',
     role: 'Attacker',
     image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/3YQiStwC1Qo4wKWmgK6XCH/ac8a0fea30f2996f96ca31b17a0039fa/r6s-operators-badge-ram.png',
-    uniqueAbility: { name: 'placeholder', quantity: 0 },
+    uniqueAbility: { name: 'BU-GI Auto Breacher', quantity: 2 },
     secondaryGadgets: [
-      { name: 'placeholder', quantity: 0 },
-      { name: 'placeholder', quantity: 0 }
+      { name: 'Smoke Grenade', quantity: 2 },
+      { name: 'Stun Grenade', quantity: 2 }
     ]
   },
   {
@@ -83,10 +93,10 @@ const OperatorData = [
     name: 'Brava',
     role: 'Attacker',
     image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/1JTzualMKZVGfdROg4XKh8/7989454e62b7972bfd88f09097cc148f/r6s-operators-badge-brava.png',
-    uniqueAbility: { name: 'placeholder', quantity: 0 },
+    uniqueAbility: { name: 'Kludge Drone', quantity: 2 },
     secondaryGadgets: [
-      { name: 'placeholder', quantity: 0 },
-      { name: 'placeholder', quantity: 0 }
+      { name: 'Smoke Grenade', quantity: 2 },
+      { name: 'Claymore', quantity: 2 }
     ]
   },
   {
@@ -103,20 +113,22 @@ const OperatorData = [
     name: 'Grim',
     role: 'Attacker',
     image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/5VoAYPvRZXIwjcwTD3PWaZ/b9748f007c0c116ca1bcd77b0f91e766/r6s-operators-badge-grim.png',
-    uniqueAbility: { name: 'placeholder', quantity: 0 },
+    uniqueAbility: { name: 'Kawan Hive Launcher', quantity: 3 },
     secondaryGadgets: [
-      { name: 'placeholder', quantity: 0 },
-      { name: 'placeholder', quantity: 0 }
+      { name: 'Claymore', quantity: 2 },
+      { name: 'Hard Breach Charge', quantity: 2 },
+      { name: 'Impact EMP Grenade', quantity: 2 },
     ]
   },
   {
     name: 'Sens',
     role: 'Attacker',
     image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/7pqZFaPgQwaLi1pFKuAv7e/d3d9af214737fe6a069e5346c50bfd20/r6s-operators-badge-sens.png',
-    uniqueAbility: { name: 'placeholder', quantity: 0 },
+    uniqueAbility: { name: 'R.O.U. Projector System', quantity: 0 },
     secondaryGadgets: [
-      { name: 'placeholder', quantity: 0 },
-      { name: 'placeholder', quantity: 0 }
+      { name: 'Claymore', quantity: 2 },
+      { name: 'Frag Grenade', quantity: 2 },
+      { name: 'Hard Breach Charge', quantity: 2 }
     ]
   },
   {
@@ -143,10 +155,11 @@ const OperatorData = [
     name: 'Osa',
     role: 'Attacker',
     image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/5tt27EFHYjiDLo2qbYEgXG/2f1acbb8209e45b136ca7b0e2e5eb1f9/r6s-operators-badge-osa.png',
-    uniqueAbility: { name: 'placeholder', quantity: 0 },
+    uniqueAbility: { name: 'Talon-8 Clear Shield', quantity: 1 },
     secondaryGadgets: [
-      { name: 'placeholder', quantity: 0 },
-      { name: 'placeholder', quantity: 0 }
+      { name: 'Claymore', quantity: 2 },
+      { name: 'Frag Grenade', quantity: 2 },
+      { name: 'Impact EMP Grenade', quantity: 2}
     ]
   },
   {
@@ -183,20 +196,20 @@ const OperatorData = [
     name: 'Zero',
     role: 'Attacker',
     image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/4ZbzOZt1Sur77RZTFwYVJ4/30037e84b2948449652547f06df146e0/Y5S3_BADGE_Zero_L.png',
-    uniqueAbility: { name: 'placeholder', quantity: 0 },
+    uniqueAbility: { name: 'Argus Launcher', quantity: 3 },
     secondaryGadgets: [
-      { name: 'placeholder', quantity: 0 },
-      { name: 'placeholder', quantity: 0 }
+      { name: 'Hard Breach Charge', quantity: 2 },
+      { name: 'Claymore', quantity: 2 }
     ]
   },
   {
     name: 'Ace',
     role: 'Attacker',
     image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/dgG7GmXY1HgfeEE2gI1H9/06bd3917c8fc19f61654490019ef25fb/Y5S2_BADGE_Ace_L.png',
-    uniqueAbility: { name: 'placeholder', quantity: 0 },
+    uniqueAbility: { name: 'S.E.L.M.A. Aqua Breacher', quantity: 3 },
     secondaryGadgets: [
-      { name: 'placeholder', quantity: 0 },
-      { name: 'placeholder', quantity: 0 }
+      { name: 'Breach Charge', quantity: 2},
+      { name: 'Claymore', quantity: 2 }
     ]
   },
   {
@@ -223,10 +236,10 @@ const OperatorData = [
     name: 'Iana',
     role: 'Attacker',
     image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/6deSi1vse5iJTkErFksrGq/75bf1038e9698b6b2be75aa0493b092d/Y5S1_BADGE_Iana_L.png',
-    uniqueAbility: { name: 'placeholder', quantity: 0 },
+    uniqueAbility: { name: 'Gemini Projector', quantity: 0 },
     secondaryGadgets: [
-      { name: 'placeholder', quantity: 0 },
-      { name: 'placeholder', quantity: 0 }
+      { name: 'Impact EMP Grenade', quantity: 2 },
+      { name: 'Smoke Grenade', quantity: 2 }
     ]
   },
   {
@@ -243,20 +256,21 @@ const OperatorData = [
     name: 'Kali',
     role: 'Attacker',
     image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/6r1hk1EunQirF1IcY4TG8T/0d3fbb7508a7747fd51249b1b8ea9779/Y4S4_BADGE_Kali_L.png',
-    uniqueAbility: { name: 'placeholder', quantity: 0 },
+    uniqueAbility: { name: 'LV Explosive Lance', quantity: 2 },
     secondaryGadgets: [
-      { name: 'placeholder', quantity: 0 },
-      { name: 'placeholder', quantity: 0 }
+      { name: 'Breach Charge', quantity: 2 },
+      { name: 'Claymore', quantity: 2 },
+      { name: 'Smoke Grenade', quantity: 2 }
     ]
   },
   {
     name: 'Amaru',
     role: 'Attacker',
     image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/2K1uxROLvHGxOIOMpNRFeU/7b4afc5ded3d1b9a937d1b504b5d4d0d/Y4S3_BADGE_Amaru_L.png',
-    uniqueAbility: { name: 'placeholder', quantity: 0 },
+    uniqueAbility: { name: 'Garra Hook', quantity: 1 },
     secondaryGadgets: [
-      { name: 'placeholder', quantity: 0 },
-      { name: 'placeholder', quantity: 0 }
+      { name: 'Stun Grenade ', quantity: 2 },
+      { name: 'Hard Breach Grenade', quantity: 2 }
     ]
   },
   {
@@ -273,10 +287,11 @@ const OperatorData = [
     name: 'NØKK',
     role: 'Attacker',
     image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/2qfSHHTdCRVhx9EWycVDNr/9e361e73fb91e571f7470de21edf5c7a/Y4S2_BADGE_Nokk_L.png',
-    uniqueAbility: { name: 'placeholder', quantity: 0 },
+    uniqueAbility: { name: 'HEL Presence Reduction', quantity: 1},
     secondaryGadgets: [
-      { name: 'placeholder', quantity: 0 },
-      { name: 'placeholder', quantity: 0 }
+      { name: 'Hard Breach Charge', quantity: 2 },
+      { name: 'Frag Grenade', quantity: 2 },
+      { name: 'Impact EMP Grenade', quantity: 2 }
     ]
   },
   {
@@ -303,20 +318,21 @@ const OperatorData = [
     name: 'Gridlock',
     role: 'Attacker',
     image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/5LIyheUROsdMDkX6o0zh6R/f201ce65af771459c374ef71c89827b4/Y4S1_BADGE_Gridlock_LL.png',
-    uniqueAbility: { name: 'placeholder', quantity: 0 },
+    uniqueAbility: { name: 'Trax Stingers', quantity: 2 },
     secondaryGadgets: [
-      { name: 'placeholder', quantity: 0 },
-      { name: 'placeholder', quantity: 0 }
+      { name: 'Smoke Grenade', quantity: 2 },
+      { name: 'Frag Grenade', quantity: 2 },
+      { name: 'Impact EMP Grenade', quantity: 2 }
     ]
   },
   {
     name: 'Nomad',
     role: 'Attacker',
     image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/UxfU1gJDoZGDrzT3iBsIp/b1aa522cc08e4631b9a857b52afa4f99/Y3S4_BADGE_Nomad_L.png',
-    uniqueAbility: { name: 'placeholder', quantity: 0 },
+    uniqueAbility: { name: 'AirJab Launcher', quantity: 3 },
     secondaryGadgets: [
-      { name: 'placeholder', quantity: 0 },
-      { name: 'placeholder', quantity: 0 }
+      { name: 'Breach Charge', quantity: 2 },
+      { name: 'Stun Grenade', quantity: 2 }
     ]
   },
   {
