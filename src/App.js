@@ -1366,7 +1366,7 @@ const App = () => {
               {/* Main Content Area */}
               <div className="flex-1 bg-white dark:bg-gray-900 p-4 flex flex-col overflow-hidden text-black dark:text-white transition-colors">
                 <h1 className="text-xl sm:text-3xl font-bold text-gray-800 dark:text-white">
-                  Welcome to R6 Siege Map Annotations
+                  Welcome to Rainbow 6 Siege Map Annotations
                 </h1>
                 <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300">
                   Select a map, choose a floor, and start annotating!
@@ -1437,24 +1437,38 @@ const App = () => {
                               <div key={idx} className="mb-2 border-b pb-1">
                                 <div className="font-semibold">{op.name}</div>
                                 {/* Unique Ability */}
-                                {op.uniqueAbility && op.uniqueAbility.name && op.uniqueAbility.name !== 'placeholder' && (
-                                  <div
-                                    draggable
-                                    onDragStart={e => {
-                                      const gadgetInfo = GadgetData[op.uniqueAbility?.name];
-                                      e.dataTransfer.setData('gadget', JSON.stringify({
-                                        type: 'unique',
-                                        operator: op.name,
-                                        name: op.uniqueAbility?.name,
-                                        quantity: op.uniqueAbility?.quantity,
-                                        image: gadgetInfo?.image || op.image
-                                      }));
-                                    }}
-                                    className="cursor-move text-xs bg-blue-100 rounded px-2 py-1 my-1"
-                                  >
-                                    {op.uniqueAbility?.name} ({op.uniqueAbility?.quantity})
-                                  </div>
-                                )}
+                                {op.uniqueAbility && op.uniqueAbility.name && op.uniqueAbility.name !== 'placeholder' && (() => {
+                                  const floorKey = getCurrentFloorKey();
+                                  const placedOps = placedOperatorsByFloor[floorKey] || [];
+                                  const opPlaced = placedOps.find(o => o.name === op.name);
+                                  const usedCount = opPlaced?.usedUniqueAbility || 0;
+                                  const maxCount = op.uniqueAbility.quantity === 'Unlimited' ? Infinity : op.uniqueAbility.quantity;
+                                  const canDrag = usedCount < maxCount;
+
+                                  return (
+                                    <div
+                                      draggable={canDrag}
+                                      onDragStart={e => {
+                                        if (!canDrag) {
+                                          e.preventDefault();
+                                          return;
+                                        }
+                                        const gadgetInfo = GadgetData[op.uniqueAbility?.name];
+                                        e.dataTransfer.setData('gadget', JSON.stringify({
+                                          type: 'unique',
+                                          operator: op.name,
+                                          name: op.uniqueAbility?.name,
+                                          quantity: op.uniqueAbility?.quantity,
+                                          image: gadgetInfo?.image || op.image
+                                        }));
+                                      }}
+                                      className={`cursor-move text-xs bg-blue-100 rounded px-2 py-1 my-1 ${!canDrag ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                      title={canDrag ? undefined : "No uses left"}
+                                    >
+                                      {op.uniqueAbility?.name} ({maxCount === Infinity ? '∞' : maxCount - usedCount} left)
+                                    </div>
+                                  );
+                                })()}
                                 {op.secondaryGadgets?.filter(g => g.name && g.name !== 'placeholder').map((g, i) => {
                                   const floorKey = getCurrentFloorKey();
                                   const placedOps = placedOperatorsByFloor[floorKey] || [];
@@ -1527,24 +1541,38 @@ const App = () => {
                               <div key={idx} className="mb-2 border-b pb-1">
                                 <div className="font-semibold">{op.name}</div>
                                 {/* Unique Ability */}
-                                {op.uniqueAbility && op.uniqueAbility.name && op.uniqueAbility.name !== 'placeholder' && (
-                                  <div
-                                    draggable
-                                    onDragStart={e => {
-                                      const gadgetInfo = GadgetData[op.uniqueAbility?.name];
-                                      e.dataTransfer.setData('gadget', JSON.stringify({
-                                        type: 'unique',
-                                        operator: op.name,
-                                        name: op.uniqueAbility?.name,
-                                        quantity: op.uniqueAbility?.quantity,
-                                        image: gadgetInfo?.image || op.image
-                                      }));
-                                    }}
-                                    className="cursor-move text-xs bg-blue-100 rounded px-2 py-1 my-1"
-                                  >
-                                    {op.uniqueAbility?.name} ({op.uniqueAbility?.quantity})
-                                  </div>
-                                )}
+                                {op.uniqueAbility && op.uniqueAbility.name && op.uniqueAbility.name !== 'placeholder' && (() => {
+                                  const floorKey = getCurrentFloorKey();
+                                  const placedOps = placedOperatorsByFloor[floorKey] || [];
+                                  const opPlaced = placedOps.find(o => o.name === op.name);
+                                  const usedCount = opPlaced?.usedUniqueAbility || 0;
+                                  const maxCount = op.uniqueAbility.quantity === 'Unlimited' ? Infinity : op.uniqueAbility.quantity;
+                                  const canDrag = usedCount < maxCount;
+
+                                  return (
+                                    <div
+                                      draggable={canDrag}
+                                      onDragStart={e => {
+                                        if (!canDrag) {
+                                          e.preventDefault();
+                                          return;
+                                        }
+                                        const gadgetInfo = GadgetData[op.uniqueAbility?.name];
+                                        e.dataTransfer.setData('gadget', JSON.stringify({
+                                          type: 'unique',
+                                          operator: op.name,
+                                          name: op.uniqueAbility?.name,
+                                          quantity: op.uniqueAbility?.quantity,
+                                          image: gadgetInfo?.image || op.image
+                                        }));
+                                      }}
+                                      className={`cursor-move text-xs bg-blue-100 rounded px-2 py-1 my-1 ${!canDrag ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                      title={canDrag ? undefined : "No uses left"}
+                                    >
+                                      {op.uniqueAbility?.name} ({maxCount === Infinity ? '∞' : maxCount - usedCount} left)
+                                    </div>
+                                  );
+                                })()}
                                 {op.secondaryGadgets?.filter(g => g.name && g.name !== 'placeholder').map((g, i) => {
                                   const floorKey = getCurrentFloorKey();
                                   const placedOps = placedOperatorsByFloor[floorKey] || [];
@@ -2046,6 +2074,7 @@ const App = () => {
                                 const rect = e.target.getBoundingClientRect();
                                 const x = (e.clientX - rect.left) / zoom;
                                 const y = (e.clientY - rect.top) / zoom;
+                                const floorKey = getCurrentFloorKey();
                               
                                 // Handle operator drop (move)
                                 const movingIndex = e.dataTransfer.getData('movingIndex');
@@ -2069,28 +2098,50 @@ const App = () => {
                                     const opIdx = ops.findIndex(o => o.name === gadget.operator);
                                     if (opIdx === -1) return prev; // Operator not found
 
-                                    // Track usage
-                                    const usedGadgets = { ...(ops[opIdx].usedGadgets || {}) };
-                                    const used = usedGadgets[gadget.name] || 0;
-                                    if (used >= gadget.quantity) return prev; // Already at max
+                                    if (gadget.type === 'unique') {
+                                      // Unique ability usage
+                                      const usedUniqueAbility = ops[opIdx].usedUniqueAbility || 0;
+                                      const maxCount = gadget.quantity === 'Unlimited' ? Infinity : gadget.quantity;
+                                      if (usedUniqueAbility >= maxCount) return prev; // Already at max
 
-                                    // Place the gadget and increment usage
-                                    usedGadgets[gadget.name] = used + 1;
-                                    ops[opIdx] = { ...ops[opIdx], usedGadgets };
-                                    return {
-                                      ...prev,
-                                      [floorKey]: [
-                                        ...ops,
-                                        {
-                                          ...gadget,
-                                          x,
-                                          y,
-                                          type: 'gadget',
-                                          operatorIndex: opIdx, // Track which operator this gadget belongs to
-                                          role: ops[opIdx].role, // Maintain the operator's role
-                                        }
-                                      ]
-                                    };
+                                      ops[opIdx] = { ...ops[opIdx], usedUniqueAbility: usedUniqueAbility + 1 };
+                                      return {
+                                        ...prev,
+                                        [floorKey]: [
+                                          ...ops,
+                                          {
+                                            ...gadget,
+                                            x,
+                                            y,
+                                            type: 'gadget',
+                                            operatorIndex: opIdx,
+                                            role: ops[opIdx].role,
+                                          }
+                                        ]
+                                      };
+                                    } else {
+                                      // Secondary gadget usage (existing logic)
+                                      const usedGadgets = { ...(ops[opIdx].usedGadgets || {}) };
+                                      const used = usedGadgets[gadget.name] || 0;
+                                      if (used >= gadget.quantity) return prev; // Already at max
+
+                                      usedGadgets[gadget.name] = used + 1;
+                                      ops[opIdx] = { ...ops[opIdx], usedGadgets };
+                                      return {
+                                        ...prev,
+                                        [floorKey]: [
+                                          ...ops,
+                                          {
+                                            ...gadget,
+                                            x,
+                                            y,
+                                            type: 'gadget',
+                                            operatorIndex: opIdx,
+                                            role: ops[opIdx].role,
+                                          }
+                                        ]
+                                      };
+                                    }
                                   });
                                   return;
                                 }
