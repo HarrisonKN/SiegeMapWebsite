@@ -161,7 +161,7 @@ const mapsData = [
     floors: [
       {name: 'Armory/Throne', image:'/images/Sites/Theme-1FArmory-1FThrone.jpg'},
       {name: 'Lab/Storage: ', image: '/images/Sites/Theme-1FLab-1FStorage.jpg'},
-      {name: 'Bunk/DayCare', image: '/images/Sites/Theme-2FBunk-2FDaycare.jpg'},
+      {name: 'Bunk/DayCare', image: '/images/Sites/Theme-2FBunk-2FDayCare.jpg'},
       {name: 'Initiation/Office', image: '/images/Sites/Theme-2FInitiation-2FOffice.jpg'},
 
       {name: 'Roof', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/4LsnAuElC7lVo8H3HYXvSr/a326abb326eb1b64edb7a957001a625d/r6-maps-themepark-blueprint-4.jpg'},

@@ -13,9 +13,11 @@ root.render(
   <React.StrictMode>
     <AppProvider>
       <UserProvider>
-        <Router>
-          <App />
-        </Router>
+        <DarkModeProvider>
+          <Router>
+            <App />
+          </Router>
+        </DarkModeProvider>
       </UserProvider>
     </AppProvider>
   </React.StrictMode>,

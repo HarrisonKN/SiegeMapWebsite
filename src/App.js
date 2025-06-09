@@ -64,6 +64,11 @@ const App = () => {
   // Hook to get the current route
   const location = useLocation();
 
+  const [showWelcome, setShowWelcome] = useState(() => {
+    // Only show once per session
+    return !sessionStorage.getItem('siegeMapWelcomeDismissed');
+  });
+
 
   function centerMapView() {
     if (scrollRef.current && mapSize.width && mapSize.height) {
@@ -567,7 +572,7 @@ const App = () => {
   
     return () => resizeObserver.disconnect();
   }, [mapSize.width, mapSize.height, zoom]);
-  
+
   useEffect(() => {
     centerMapView();
   }, [mapSize.width, mapSize.height, zoom]);
@@ -1049,16 +1054,7 @@ const App = () => {
     </>
   );
   
-  const ZoomButton = ({ label, icon, onClick }) => (
-  <div
-    className="rounded text-center cursor-pointer hover:bg-gray-400 bg-gray-300 p-1 min-w-[28px] flex flex-col items-center"
-    style={{ fontSize: '0.7rem', maxWidth: 90 }}
-    onClick={onClick}
-  >
-    <i className={`${icon} text-[25px]`}></i>
-    <p className="font-semibold text-[8px] mt-0.5">{label}</p>
-  </div>
-);
+  
   
 
   const handleFloorSelect = (floor) => {
@@ -1115,25 +1111,42 @@ const App = () => {
   };
 
   const ToolButton = ({ label, icon, current, setCurrent, customOnClick = null, tooltip }) => (
-  <Tooltip text={tooltip}>
+    <Tooltip text={tooltip}>
+      <div
+        className={`p-1 sm:p-2 rounded text-center cursor-pointer
+          ${current === label.toLowerCase()
+            ? 'bg-blue-500 text-white dark:bg-blue-400'
+            : 'bg-gray-300 text-black dark:bg-gray-700 dark:text-gray-100'}
+          hover:bg-gray-400 dark:hover:bg-gray-600
+          min-w-[32px] sm:min-w-[48px] flex flex-col items-center`}
+        style={{ maxWidth: 60 }}
+        onClick={() => {
+          if (customOnClick) {
+            customOnClick();
+          } else {
+            setCurrent(label.toLowerCase());
+          }
+        }}
+      >
+        <i className={`${icon} text-xs sm:text-base`}></i>
+        <p className="font-semibold text-[9px] sm:text-xs mt-0.5">{label}</p>
+      </div>
+    </Tooltip>
+  );
+
+  const ZoomButton = ({ label, icon, onClick }) => (
     <div
-      className={`p-1 sm:p-2 rounded text-center cursor-pointer hover:bg-gray-400 
-        ${current === label.toLowerCase() ? 'bg-blue-500' : 'bg-gray-300'}
-        min-w-[32px] sm:min-w-[48px] flex flex-col items-center`}
-      style={{ maxWidth: 60 }}
-      onClick={() => {
-        if (customOnClick) {
-          customOnClick();
-        } else {
-          setCurrent(label.toLowerCase());
-        }
-      }}
+      className="rounded text-center cursor-pointer
+        bg-gray-300 text-black dark:bg-gray-700 dark:text-gray-100
+        hover:bg-gray-400 dark:hover:bg-gray-600
+        p-1 min-w-[28px] flex flex-col items-center"
+      style={{ fontSize: '0.7rem', maxWidth: 90 }}
+      onClick={onClick}
     >
-      <i className={`${icon} text-xs sm:text-base`}></i>
-      <p className="font-semibold text-[9px] sm:text-xs mt-0.5">{label}</p>
+      <i className={`${icon} text-[25px]`}></i>
+      <p className="font-semibold text-[8px] mt-0.5">{label}</p>
     </div>
-  </Tooltip>
-);
+  );
 
 <div className={toolLayout === 'vertical'
     ? "flex flex-col gap-1 w-20 shrink-0 overflow-y-auto"
@@ -1146,6 +1159,27 @@ const App = () => {
 
   return (
     <div className="flex flex-col h-[100dvh] bg-white text-black dark:bg-gray-900 dark:text-white transition-colors">
+      {showWelcome && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white dark:bg-gray-800 text-black dark:text-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
+            <h2 className="text-xl font-bold mb-2 text-center">Welcome!</h2>
+            <p className="mb-4 text-center">
+              This is a small personal project for Rainbow Six Siege map annotations.<br />
+              If you have suggestions or feedback, please use the <b>Settings</b> page.<br />
+              Your input is greatly appreciated!
+            </p>
+            <button
+              className="block mx-auto bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+              onClick={() => {
+                setShowWelcome(false);
+                sessionStorage.setItem('siegeMapWelcomeDismissed', '1');
+              }}
+            >
+              Got it!
+            </button>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <div className="bg-gray-800 text-white p-4 flex flex-col sm:flex-row justify-between items-center relative">
         {/* Heading */}
@@ -1278,7 +1312,7 @@ const App = () => {
       </div>
 
       {/* Main Body Layout */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden bg-white dark:bg-gray-900 text-black dark:text-white transition-colors">
       <Routes>
             <Route path="/" element={<React.Fragment>
               {/* Map Sidebar */}
@@ -1330,21 +1364,26 @@ const App = () => {
           
 
               {/* Main Content Area */}
-              <div className="flex-1 bg-white p-4 flex flex-col overflow-hidden">
-                <h1 className="text-xl sm:text-3xl font-bold text-gray-800">Welcome to R6 Siege Map Annotations</h1>
-                <p className="text-base sm:text-lg text-gray-600">Select a map, choose a floor, and start annotating!</p>
+              <div className="flex-1 bg-white dark:bg-gray-900 p-4 flex flex-col overflow-hidden text-black dark:text-white transition-colors">
+                <h1 className="text-xl sm:text-3xl font-bold text-gray-800 dark:text-white">
+                  Welcome to R6 Siege Map Annotations
+                </h1>
+                <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300">
+                  Select a map, choose a floor, and start annotating!
+                </p>
 
                 <div className={`flex ${toolLayout === 'vertical' ? 'flex-row' : 'flex-col'} gap-6 flex-1 overflow-hidden`}>
-                
                   {/* Floor buttons for mobile */}
                   {selectedMap && (
-                    <div className="w-full flex justify-center gap-2 bg-white/90 p-2 rounded shadow mb-2 z-10">
+                    <div className="w-full flex justify-center gap-2 bg-white/90 dark:bg-gray-800/90 p-2 rounded shadow mb-2 z-10">
                       {selectedMap.floors.map((floor) => (
                         <button
                           key={floor.name}
                           className={`px-3 py-1 rounded font-semibold ${
-                            selectedFloor?.name === floor.name ? 'bg-blue-500 text-white' : 'bg-white text-gray-700'}
-                            border border-gray-300`}
+                            selectedFloor?.name === floor.name
+                              ? 'bg-blue-500 text-white'
+                              : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200'
+                          } border border-gray-300 dark:border-gray-700`}
                           onClick={() => handleFloorSelect(floor)}
                         >
                           {floor.name}
@@ -1352,10 +1391,10 @@ const App = () => {
                       ))}
                     </div>
                   )}
-                  
+
                   {/* Map Viewer */}
                   <div
-                    className="relative bg-gray-200 flex-1 flex justify-center items-center rounded overflow-hidden"
+                    className="relative bg-gray-200 dark:bg-gray-800 flex-1 flex justify-center items-center rounded overflow-hidden"
                     style={{
                       minWidth: 0,
                       minHeight: 0,
@@ -2166,10 +2205,4 @@ const App = () => {
   );
 };
 
-export default () => (
-  <DarkModeProvider>
-    <AppProvider>
-      <App />
-    </AppProvider>
-  </DarkModeProvider>
-);
+export default App;
