@@ -6,6 +6,7 @@ import { AppProvider } from './context/AppContext';
 import './styles.css';
 import reportWebVitals from './reportWebVitals';
 import { UserProvider } from './context/UserContext';
+import { DarkModeProvider } from './components/DarkMode';
 
 const root = ReactDOM.createRoot(document.getElementById('root')); // Ensure 'root' matches the id in index.html
 root.render(

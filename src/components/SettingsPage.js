@@ -1,12 +1,14 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useDarkMode } from "./DarkMode";
 
 const SettingsPage = () => {
+
+  const { darkMode, setDarkMode } = useDarkMode();
   const navigate = useNavigate();
 
   // Example settings state (expand as needed)
   const [toolLayout, setToolLayout] = React.useState("horizontal");
-  const [darkMode, setDarkMode] = React.useState(false);
 
   return (
     <div className="max-w-2xl mx-auto p-4">

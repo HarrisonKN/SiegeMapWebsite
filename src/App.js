@@ -13,6 +13,7 @@ import { useUser } from './context/UserContext';
 import ResetPasswordPage from './components/ResetPasswordPage';
 import SubmitChangesPage from './components/SubmitChangesPage';
 import SettingsPage from './components/SettingsPage';
+import { DarkModeProvider, useDarkMode } from './components/DarkMode';
 
 import './styles.css';
 
@@ -44,7 +45,7 @@ const App = () => {
 
   const { user } = useUser();
   const navigate = useNavigate();
-
+  const { darkMode } = useDarkMode();
   const canvasRef = useRef(null);
   const { zoom, setZoom } = useAppContext();
   const scrollRef = useRef(null);
@@ -1132,8 +1133,7 @@ const App = () => {
 
 
   return (
-  <div className="flex flex-col h-[100dvh]">
-
+    <div className="flex flex-col h-[100dvh] bg-white text-black dark:bg-gray-900 dark:text-white transition-colors">
       {/* Header */}
       <div className="bg-gray-800 text-white p-4 flex flex-col sm:flex-row justify-between items-center relative">
         {/* Heading */}
@@ -1254,15 +1254,13 @@ const App = () => {
                 Login/Register
               </Link>
             )}
-            <button
-              className="w-full text-center py-2 px-4 hover:bg-gray-700"
-              onClick={() => {
-                setShowSettings(!showSettings);
-                setMobileMenuOpen(false);
-              }}
-            >
-              Settings
-            </button>
+              <Link
+                to="/settingsPage"
+                className="w-full text-center py-2 px-4 hover:bg-gray-700"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Settings
+              </Link>
           </div>
         )}
       </div>
@@ -1902,7 +1900,9 @@ const App = () => {
 };
 
 export default () => (
-  <AppProvider>
-    <App />
-  </AppProvider>
+  <DarkModeProvider>
+    <AppProvider>
+      <App />
+    </AppProvider>
+  </DarkModeProvider>
 );
