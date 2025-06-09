@@ -3,9 +3,10 @@ const mapsData = [
     name: 'Lair',
     thumbnail: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/423IqxUqD6yfPEy6CissY0/b97de350094cd300c911ec53915d0c9a/r6s-maps-lair.jpg',
     floors: [
-      {name: 'Basement', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/5PYxexbImMQq45PlPjD9gu/4cd09b41784af37b09d0da70195a0b7e/r6-maps-lair-blueprint-1.jpg'},
-      {name: 'First Floor', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/5daqcyybjo4fCebDDttTI5/9d3ffa11a695138640706f310f990553/r6-maps-lair-blueprint-2.jpg'},
-      {name: 'Second Floor', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/144IZSQuvlTd5mbM9C1xHE/5df60b08430044972cd2add486e01018/r6-maps-lair-blueprint-3.jpg'},
+      {name: 'Labs/Support', image: '/images/Sites/Lair-BLab-BSupport.jpg'},
+      {name: 'Armory/Maintenance', image: '/images/Sites/Lair-1FArmory-1FMaintenance.jpg'},
+      {name: 'Bunks/Briefing', image: 'images/Sites/Lair-1FBunks-1FBriefing.jpg'},
+      {name: 'Master/R6', image: 'images/Sites/Lair-2FMaster-2FR6Room.jpg'},
       {name: 'Roof', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/5NiPXavipZgr5lAQ1RrMu2/b9e0778fe50f6f8c6af1644432c87ede/r6-maps-lair-blueprint-4.jpg'},
 
     ]},
@@ -14,9 +15,10 @@ const mapsData = [
     name: 'Labs',
     thumbnail: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/57i2PyuzpgVFzOvLUSAItO/636e57b198377a5a5d1d35492b52b808/Nighthaven_labs_screen.jpg',
     floors: [
-      {name: 'Basement', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/79cZrFmYWuCtDCJwtLKvFn/a8ed21b415840882f77761360ce53b96/r6-maps-nighthavenlabs-blueprint-1.jpg'},
-      {name: 'First Floor', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/66qd9bxgAePlWPj9kgzGvg/d5676fc1d523c632d176afbac9d626ab/r6-maps-nighthavenlabs-blueprint-2.jpg'},
-      {name: 'Second Floor', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/31Y9aEgTpzdsVKP24E79JV/239054f74eebb3123296056f4467144e/r6-maps-nighthavenlabs-blueprint-3.jpg'},
+      {name: 'Tank/Assembly', image: '/images/Sites/Labs-BTank-BAssembly.jpg'},
+      {name: 'Control/Storage', image: '/images/Sites/Labs-1FControl-1FStorage.jpg'},
+      {name: 'Kitchen/Cafe', image: '/images/Sites/Labs-1FKitchen-1FCafe.jpg'},
+      {name: 'CC/Servers', image: '/images/Sites/Labs-2FCC-2FServers.jpg'},
       {name: 'Roof', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/6pVV3IwBrEkwtzyoeD1C5K/51da4b9380bdbff1b2d9e0eafac2e981/r6-maps-nighthavenlabs-blueprint-4.jpg'},
       
     ]},
@@ -25,8 +27,10 @@ const mapsData = [
     name: 'Plains',
     thumbnail: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/1IGW5GG24TGEv3q8bRc9aJ/a73e0dc1fd385b4afd32cd3a2592a294/r6s_maps_emeraldplains__1_.jpg',
     floors: [
-      {name: 'First Floor', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/6IPo90GFnnPbW4ri4arLND/066cafe4e7a2d36c8271570cd6047c50/r6-maps-emeraldplains-blueprint-1.jpg'},
-      {name: 'Second Floor', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/7uZShb7RUrKPxmdhs9nwFq/e84d6ba647344e5b9a86c09e1c4bb289/r6-maps-emeraldplains-blueprint-2.jpg'},
+      {name: 'Bar/Lounge', image: '/images/Sites/Plains-1FBar-1FLounge.jpg'},
+      {name: 'Dining/Kitchen', image: '/images/Sites/Plains-1FDining-1FKitchen.jpg'},
+      {name: 'Admin/CEO', image: '/images/Sites/Plains-2FAdmin-2FCEO.jpg'},
+      {name: 'Gallery/Meeting', image: '/images/Sites/Plains-2FGallery-2FMeeting.jpg'},
       {name: 'Roof', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/5gCmYTC5VTYuGG4T499nQ9/cb239179bcc029ea961a0f9d1d125fa4/r6-maps-emeraldplains-blueprint-3.jpg'},
     ]},
   
@@ -34,9 +38,10 @@ const mapsData = [
     name: 'Bank' , 
     thumbnail: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/6ilgtuzucX7hEu2MvjhRtp/0bb6e106d78625ea218a572fbb7a5157/r6-maps-bank.jpg',
     floors: [
-      {name: 'Basement', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/1DQ8HzVXAIpl5Flv1BNURw/c312cb87861b6c936510bc751ba9683b/r6-maps-bank-blueprint-3.jpg'},
-      {name: 'Ground', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/6ZcnTtEXcYt8CrMsjbCvSu/df6694e263225814bb6ac8a0787d90d5/r6-maps-bank-blueprint-1.jpg'},
-      {name: 'First Floor', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/6ITkJP9lxHjVKzS9Ubcwtv/5e3948920858f8a624cffa56fc7514df/r6-maps-bank-blueprint-2.jpg'},
+      {name: 'Lockers/CCTV', image: '/images/Sites/Bank-BLockers-BCCTV.jpg'},
+      {name: 'Staff/Open', image: '/images/Sites/Bank-1FStaff-1FOpen.jpg'},
+      {name: 'Tellers/Archives', image: '/images/Sites/Bank-1FTellers-1FArchives.jpg'},
+      {name: 'Exec/CEO', image: '/images/Sites/Bank-2FExec-2FCEO.jpg'},
       {name: 'Roof', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/3iRfs8bs7ZDzQLiXtWH5sk/faffda675d754e148bb0ab2c249239ae/r6-maps-bank-blueprint-4.jpg'}
     ]},
   
@@ -44,8 +49,10 @@ const mapsData = [
     name: 'Border' , 
     thumbnail: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/4hqsrL3cokFqedkfjiEaGf/c73f6714b535263a18e4de2ca2405dd1/r6-maps-border__1_.jpg',
     floors: [
-      {name: 'Ground', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/4nl4T7y1mBfwrti5e8Jq9Q/78fc6dbba89cdcc5a10a8e90889e870b/r6-maps-border-blueprint-1.jpg'},
-      {name: 'First Floor', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/1lG2AxuPadRvfN8Vjx7jGV/200afc5ce945628b744437a20969b1c5/r6-maps-border-blueprint-2.jpg'},
+      {name: 'Bath/Tellers', image: '/images/Sites/Border-1FBath-1FTellers.jpg'},
+      {name: 'Customs/Supply', image: '/images/Sites/Border-1FCustoms-1FSupply.jpg'},
+      {name: 'Ventilation/Workshop', image: '/images/Sites/Border-1FVentil-1FWorkshop.jpg'},
+      {name: 'Armory/Archives', image: '/images/Sites/Border-2FArmory-2FArchives.jpg'},
       {name: 'Roof', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/7KjYpqMzBlBDHY1Vbwtz55/d87fe5e00d1623434a9499d485d6d196/r6-maps-border-blueprint-3.jpg'}
     ]}, 
 
@@ -53,9 +60,10 @@ const mapsData = [
     name: 'Chalet',
     thumbnail: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/Km3ZJUM7ZMVbGsi6gad5Y/be2827fa6fbe0577001229effb914a27/rainbow6_maps_chalet_thumbnail.jpg',
     floors: [
-      {name: 'Basement', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/55eH3asFElZrkQdK1WmPyY/583fdef645e3bf497b0e95ea25e50bb0/r6-maps-chalet-blueprint-1.jpg'},
-      {name: 'Ground', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/1qLSejhKPmyxbRyzDvSjMF/d4b547dba92db0a7b9dbf9e533159db6/r6-maps-chalet-blueprint-2.jpg'},
-      {name: 'First Floor', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/6Zrwl833U738T3GCsWyH5O/b795a4fa369d5ce5ee9a92064c5faec3/r6-maps-chalet-blueprint-3.jpg'},
+      {name: 'Cellar/Garage', image: '/images/Sites/Chalet-BCellar-BGarage.jpg'},
+      {name: 'Bar/Dining', image: '/images/Sites/Chalet-1FBar-1FDining.jpg'},
+      {name: 'Kitchen/Dining', image: '/images/Sites/Chalet-1FKitchen-1FDining.jpg'},
+      {name: 'Master/Office', image: '/images/Sites/Chalet-2FMaster-2FOffice.jpg'},
       {name: 'Roof', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/6zyfk9G5oTn9iGjKmKqzEc/2fe9ed710db46bac51213373df14e4db/r6-maps-chalet-blueprint-4.jpg'},
     ]},
     
@@ -63,9 +71,10 @@ const mapsData = [
     name: 'Clubhouse', 
     thumbnail: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/1vCw5eD2XzxZlv6Au1gtui/baeebaa75cd672e0af8f9f624cf61bde/r6-maps-clubhouse.jpg',
     floors: [
-      {name: 'Basement', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/6Zs2KBoWjSdaC3qssqwB9N/33907dda5e0363659477296c0e9756c5/r6-maps-clubhouse-blueprint-1.jpg'},
-      {name: 'Ground', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/3taneZwe0lPRHGvXcJZb6Q/a35fd0b00699bbcc7a88bd2c08db96b6/r6-maps-clubhouse-blueprint-2.jpg'},
-      {name: 'Second Floor', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/4StUcsi07j6h4DPrmgF5rC/bb99e697439b647bb4fd192b29bb588c/r6-maps-clubhouse-blueprint-3.jpg'},
+      {name: 'Church/Arsenal', image: '/images/Sites/Clubhouse-BChurch-BArsenal.jpg'},
+      {name: 'Bar/Stage', image: '/images/Sites/Clubhouse-1FBar-1FStage.jpg'},
+      {name: 'Bedroom/Gym', image: '/images/Sites/Clubhouse-2FBedroom-2FGym.jpg'},
+      {name: 'Cash/CCTV', image: '/images/Sites/Clubhouse-2FCash-2FCCTV.jpg'},
       {name: 'Roof', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/5tP8wrsOiDBfa7NzkUUCQQ/b5e27ccd5b145ce59f8886b004e32c8e/r6-maps-clubhouse-blueprint-4.jpg'}
     ]},
 
@@ -73,8 +82,10 @@ const mapsData = [
     name: 'Coastline', 
     thumbnail: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/5GfAQ3pXCJnDqiqaDH3Zic/db1722cd699bb864ee8f7b0db951b0c3/r6-maps-coastline.jpg',
     floors: [
-      {name: 'First Floor', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/4b0lpXOb5Hv6kgJ2BvrjP9/59b1ccd49d36b8b38621d39d8f9479f9/r6-maps-coastline-blueprint-1.jpg'},
-      {name: 'Second Floor', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/5juDHwzsSzib8ljx1IzhUa/47430644b7f65c72df9f26a340bead84/r6-maps-coastline-blueprint-2.jpg'},
+      {name: 'Blue/Sunrise', image: '/images/Sites/Coastline-1FBlue-1FSunrise.jpg'},
+      {name: 'Kitchen/Service', image: '/images/Sites/Coastline-1FKitchen-1FService.jpg'},
+      {name: 'Billiards/Hookah', image: '/images/Sites/Coastline-2FBilliards-2FHookah.jpg'},
+      {name: 'Theather/Penthouse', image: '/images/Sites/Coastline-2FTheater-2FPenthouse.jpg'},
       {name: 'Roof', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/2F2dvGQqZQk0AzfTN4VbT5/7fbb95687a759f3bd9e0ece51d667e8e/r6-maps-coastline-blueprint-3.jpg'}
     ]},
 
@@ -82,9 +93,10 @@ const mapsData = [
     name: 'Consulate', 
     thumbnail: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/6PR2sBla9E6TNurVUfJ0mc/9a58f08dca1c465787e5a1b6cf6a136b/CONSULATE_REWORK_PREVIEW_03_960x540.jpg',
     floors: [
-      {name: 'Basement', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/14Ww7AoFdDGhcjgWpLTMdV/77bc68f24869fd75b49a715b67925488/r6-maps-consulate-blueprint-1.jpg'},
-      {name: 'Ground', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/v0KtqRwgoNXSvGxjn0MVR/ec1200c055944ceba822a118d3611197/r6-maps-consulate-blueprint-2.jpg'},
-      {name: 'First Floor', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/5Tu3Q2DYvBFyqszsrTwawU/cd611afdefa6713e3ec7237fabb58299/r6-maps-consulate-blueprint-3.jpg'},
+      {name: 'Cafe/Garage', image: '/images/Sites/Consulate-BCafe-BGarage.jpg'},
+      {name: 'Servers/Tellers' , image: '/images/Sites/Consulate-BServers-1FTellers.jpg'},
+      {name: 'Expos/Piano', image: '/images/Sites/Consulate-1FExpos-1FPiano.jpg'},
+      {name: 'Consul/Meeting', image: '/images/Sites/Consulate-2FConsul-2FMeeting.jpg'},
       {name: 'Roof', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/7fTsFMVeL4crvNABSGRMxJ/680ea0834826726ef5901a5d200f9c6a/r6-maps-consulate-blueprint-4.jpg'}
     ]},
   
@@ -92,9 +104,10 @@ const mapsData = [
     name: 'Kafe Dostoyevsky', 
     thumbnail: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/2nIuPSHvbM57TK90VSwBEm/70144ada56cf1ba72103aeb4ece9ed1a/r6-maps-kafe.jpg',
     floors: [
-      {name: 'Basement', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/3WeSCQnTruB4nJ0n9xm7U7/cec112a997dd78b46515b6242d25a379/r6-maps-kafe-blueprint-1.jpg'},
-      {name: 'Ground', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/7njwDjC8jAG7g2krGRKsYb/2c4216a5f3baee22074759ba1dd45e55/r6-maps-kafe-blueprint-2.jpg'},
-      {name: 'First Floor', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/15f2nyYsxok1GMsuFCrOTW/9036cb95e0f3e048b93aed8f4c13483a/r6-maps-kafe-blueprint-3.jpg'},
+      {name: 'Cooking/Service', image: '/images/Sites/Kafe-1FCooking-1FService.jpg'},
+      {name: 'Fireplace/Mining', image: '/images/Sites/Kafe-2FFireplace-2FMining.jpg'},
+      {name: 'Fireplace/Reading', image: '/images/Sites/Kafe-2FFireplace-2FReading.jpg'},
+      {name: 'Cocktail/Bar', image: '/images/Sites/Kafe-3FCocktail-3FBar.jpg'},
       {name: 'Roof', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/3DdjeKrUij0wzjVlF4FML3/6d74c067b57490ccdc7dc7b180618811/r6-maps-kafe-blueprint-4.jpg'}
     ]},
 
@@ -102,20 +115,21 @@ const mapsData = [
     name: 'Kanal',
     thumbnail: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/4VHR8uZRGkHqvtZxtmibtc/da988c2cab37f1cb186535fc9ba40bea/r6-maps-kanal.jpg',
     floors: [
-      {name: 'Underground', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/12AFRlw25YNm0BEDDFZRwb/72a48c1e6db493c793aed9848d1ddc48/r6-maps-kanal-blueprint-1.jpg'},
-      {name: 'Ground', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/fgm0tsyQwkBpzZflik2vS/3fee4162d712b61b5d3b65c3925153f3/r6-maps-kanal-blueprint-2.jpg'},
-      {name: 'First Floor', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/75B6AY7oIV1rshuQ3cZqUB/2f544df93573cd1871c8ff2a23c399d2/r6-maps-kanal-blueprint-3.jpg'},
-      {name: 'Second Floor', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/XVYbcmygF5gMVpjohY4e9/ff2eea5e48ee48d193fff62373421652/r6-maps-kanal-blueprint-4.jpg'},
+      {name: 'Supply/Kayaks', image: '/images/Sites/Kanal-BSupply-BKayaks.jpg'},
+      {name: 'Coast/Lounge', image: '/images/Sites/Kanal-1FCoast-1FLounge.jpg'},
+      {name: 'Map/Security', image: '/images/Sites/Kanal-1FMap-1FSecurity.jpg'},
+      {name: 'Radar/Servers', image: '/images/Sites/Kanal-2FRadar-2FServer.jpg'},
+      {name: 'Roof', image: ''}
     ]},
   
   { id: 12, 
     name: 'Oregon', 
     thumbnail: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/Z9a0gU7iR0vfcbXtoJUOW/42ad6aabbd189fbcd74c497627f1624e/r6-maps-oregon.jpg',
     floors: [
-      {name: 'Basement', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/qxSuuyTFOj9GcclwEl77K/49277f2343c81f14825415a3cb4e0f96/r6-maps-oregon-blueprint-1.jpg'},
-      {name: 'Ground', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/6KfdmrotDdUSi3shCZn6O4/2316ad1fb161254f7fb38b2e6c906e64/r6-maps-oregon-blueprint-2.jpg'},
-      {name: 'First Floor', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/K3su6xloMRGuZPQw0yIVD/000e6deabe35780e68d356690d4625a6/r6-maps-oregon-blueprint-3.jpg'},
-      {name: 'Second Floor', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/3eC0jrji8bJSrukCV8Th4j/ea96c1108b4575eabc16361a67826c6b/r6-maps-oregon-blueprint-4.jpg'},
+      {name: 'Laundry/Supply', image: '/images/Sites/Oregon-BLaundry-BSupply.jpg'},
+      {name: 'Kitchen/Dining', image: '/images/Sites/Oregon-1FKitchen-1FDining.jpg'},
+      {name: 'Meeting/Kitchen', image: '/images/Sites/Oregon-1FMeeting-1FKitchen.jpg'},
+      {name: 'Kids/Dorms', image: '/images/Sites/Oregon-2FKids-2FDorms.jpg'},
       {name: 'Roof', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/4eUlLOqpfR70gM7miuIIuT/082b5df86be7b17b2931b4c4e6fbe0bb/r6-maps-oregon-blueprint-5.jpg'}
     ]},
 
@@ -123,8 +137,10 @@ const mapsData = [
     name: 'Outback',
     thumbnail: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/1vqGVW6pqBZlLKp4h86NnB/08a7e337c0cfa604cde79e755fedb397/r6-maps-outback.jpg',
     floors: [
-      {name: 'First Floor', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/66RRI7vfHhSPVbmx7oVxsm/14bc3f49e7406b4552be9e5fff824ae6/r6-maps-outback-blueprint-1.jpg'},
-      {name: 'Second Floor', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/7jjNcQmgbqhjtZDHNttLha/a16a1fb966da20b802d75630ecd2e7d3/r6-maps-outback-blueprint-2.jpg'},
+      {name: 'Green/Red', image: 'images/Sites/Outback-1FGreen-1FRed.jpg'},
+      {name: 'Mechanic/Kitchen', image: 'images/Sites/Outback-1FMechanic-1FKitchen.jpg'},
+      {name: 'Laundry/Piano', image: 'images/Sites/Outback-2FLaundry-2FPiano.jpg'},
+      {name: 'Party/Office', image: 'images/Sites/Outback-2FParty-2FOffice.jpg'},
       {name: 'Roof', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/3gAUdgvuYfrVPahwetBbGZ/661ee97059469bfcfd46b2c6c6aefc29/r6-maps-outback-blueprint-3.jpg'},
     ]},
   
@@ -132,8 +148,10 @@ const mapsData = [
     name: 'Skyscraper', 
     thumbnail: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/7vblsbhmSPLsI3pQJ5Dqx9/f213af09981f5c8ec9b71fb0c3f9dcdd/r6-maps-skyscraper.jpg',
     floors: [
-      {name: 'First Floor', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/3c0AWlxZek6YUUNTaNfyO6/6b22cb6614a28bf9c13641b234cfd7ed/r6-maps-skyscraper-blueprint-1.jpg'},
-      {name: 'Second Floor', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/1l0EjB5o3s3HewE1VqmRlu/20fc25c788e0be7519a3cdba8ff5a433/r6-maps-skyscraper-blueprint-2.jpg'},
+      {name: 'Bathroom/Bedroom', image:'/images/Sites/Skyscraper-1FBathroom-1FBedroom.jpg'},
+      {name: 'BBQ/Kitchen', image: '/images/Sites/Skyscraper-1FBBQ-1FKitchen.jpg'},
+      {name: 'Exhibition/Office', image: '/images/Sites/Skyscraper-2FExhibition-2FOffice.jpg'},
+      {name: 'Karaoke/Tea', image: '/images/Sites/Skyscraper-2FKaraoke-2FTea.jpg'},
       {name: 'Roof', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/6gdx6cZMOzGaVLn5T4tSzv/7099853a4831478ba36d1444fb358c8a/r6-maps-skyscraper-blueprint-3.jpg'}
     ]},
   
@@ -141,8 +159,11 @@ const mapsData = [
     name: 'Theme Park',
     thumbnail: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/2immPCOZj6tTHMM9zeBg5B/e88428d55e970fd080e14489fbffeb06/rainbow6_maps_theme-park_thumbnail.jpg',
     floors: [
-      {name: 'First Floor', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/17vQ6v4og4uKWZ0YzG2Ja5/c2e4733d954bdd95801235e53ff47d6c/r6-maps-themepark-blueprint-2.jpg'},
-      {name: 'Second Floor', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/MgXhGys4DRlJ893gGsp2m/ce12985365be6bc1544e72202e704383/r6-maps-themepark-blueprint-3.jpg'},
+      {name: 'Armory/Throne', image:'/images/Sites/Theme-1FArmory-1FThrone.jpg'},
+      {name: 'Lab/Storage: ', image: '/images/Sites/Theme-1FLab-1FStorage.jpg'},
+      {name: 'Bunk/DayCare', image: '/images/Sites/Theme-2FBunk-2FDaycare.jpg'},
+      {name: 'Initiation/Office', image: '/images/Sites/Theme-2FInitiation-2FOffice.jpg'},
+
       {name: 'Roof', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/4LsnAuElC7lVo8H3HYXvSr/a326abb326eb1b64edb7a957001a625d/r6-maps-themepark-blueprint-4.jpg'},
     ]},
 
@@ -150,16 +171,12 @@ const mapsData = [
     name: 'Villa', 
     thumbnail: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/Io6dxNeHbCbJoF9WLJf9s/ebf89b009affba37df84dcf1934c74e0/r6-maps-villa.jpg',
     floors: [
-      {name: 'Basement', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/1CDFxayW2mJLAJy1I9KlvY/cc04fefb6181fea17cd7ae4a8e460f1b/r6-maps-villa-blueprint-1.jpg'},
-      {name: 'First Floor', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/3J49jyCJZ6nhs8NaPDxolQ/8831f7742e9f3f1e3350fd4691465275/r6-maps-villa-blueprint-3.jpg'},
-      {name: 'Second Floor', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/DgTowUc6zjVXVDa2pKLX1/a820faf2af99b971a19ab799115b28f1/r6-maps-villa-blueprint-4.jpg'},
+      {name: 'Dining/Kitchen', image: '/images/Sites/Villa-1FDining-1FKitchen.jpg'},
+      {name: 'Living/Library', image: '/images/Sites/Villa-1FLiving-1FLibrary.jpg'},
+      {name: 'Games/Aviator', image: '/images/Sites/Villa-2FGames-2FAviator.jpg'},
+      {name: 'Statuary/Trophy', image: '/images/Sites/Villa-2FStatuary-2FTrophy.jpg'},
       {name: 'Roof', image: 'https://staticctf.ubisoft.com/J3yJr34U2pZ2Ieem48Dwy9uqj5PNUQTn/2ZnV8AUq0FtZ8T3XxaYGwK/038468ed870ffc0075f6ade04808d7d2/r6-maps-villa-blueprint-5.jpg'},
     ]},
 ];
 
 export default mapsData;
-
-//Maps to Crop
-
-//Lair
-//
