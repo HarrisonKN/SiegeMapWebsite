@@ -43,7 +43,7 @@ const SuggestChangesPage = () => {
           />
           <button
             type="submit"
-            className="bg-blue-600 text-white px-4 py-2 rounded"
+            className="bg-blue-600 text-white px-4 py-2 rounded flex justify-center items-center w-full hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Submit Suggestion
           </button>
@@ -54,10 +54,42 @@ const SuggestChangesPage = () => {
       )}
       <Link
         to="/settingsPage"
-        className="bg-gray-400 text-white px-4 py-2 rounded"
+        className="bg-gray-400 text-white px-4 py-2 rounded justify-center text-center items-center flex"
       >
         Back to Settings
       </Link>
+
+      {/* Progress Section */}
+      <div className="w-full max-w-4xl p-8">
+          <h2 className="text-3xl font-bold mb-8 text-center">Development Progress</h2>
+          <div className="grid gap-8 mb-8">
+            <div className="bg-white/5 p-6 rounded-lg">
+              <h3 className="font-semibold text-green-700 text-2xl mb-4 text-center">✅ Completed</h3>
+              <ul className="list-disc list-inside text-xl space-y-2 text-center">
+                <li>Map selection and floor switching</li>
+                <li>Operator drag-and-drop placement</li>
+                <li>Annotation tools (lines, shapes, text)</li>
+                <li>Downloading site images / uploading site setups</li>
+                <li>Dark mode support</li>
+              </ul>
+            </div>
+            <div className="bg-white/5 p-6 rounded-lg">
+              <h3 className="font-semibold text-yellow-600 text-2xl mb-4 text-center">🛠️ In Progress</h3>
+              <ul className="list-disc list-inside text-xl space-y-2 text-center">
+                <li>Operator ability usage tracking</li>
+                <li>Getting unique ability images for each operator</li>
+                <li>Improved mobile UI</li>
+              </ul>
+            </div>
+            <div className="bg-white/5 p-6 rounded-lg">
+              <h3 className="font-semibold text-blue-700 text-2xl mb-4 text-center">💡 Future Ideas</h3>
+              <ul className="list-disc list-inside text-xl space-y-2 text-center">
+                <li>Team sharing and collaboration</li>
+                <li>Adjusting sizes of things in settings page</li>
+              </ul>
+            </div>
+          </div>
+        </div>
     </div>
   );
 };
